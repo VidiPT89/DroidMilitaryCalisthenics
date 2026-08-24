@@ -63,7 +63,9 @@ emulator or device (minimum SDK 26).
 `PlanEngine` has a JVM unit test suite (`app/src/test`) covering plan
 generation across the full input matrix (age, weight, level, goal,
 equipment, days/week), level- and BMI-driven calibration, and the
-weight-log recalibration path.
+weight-log recalibration path. A separate coverage test asserts every
+day title and exercise name a generated plan can contain has both a
+PT-PT and EN translation entry.
 
 ```bash
 ./gradlew :app:testDebugUnitTest

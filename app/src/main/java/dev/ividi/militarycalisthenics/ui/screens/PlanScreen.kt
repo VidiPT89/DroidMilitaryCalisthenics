@@ -153,10 +153,10 @@ private fun WorkoutCard(
             ) {
                 Column {
                     Text("${t("day", lang)} ${workout.dayIndex + 1}", color = TextDim, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                    Text(workout.title, color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 17.sp)
+                    Text(t(workout.title, lang), color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 17.sp)
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = { shareAsText(context, workout.title, workout.toShareText(lang)) }) {
+                    IconButton(onClick = { shareAsText(context, t(workout.title, lang), workout.toShareText(lang)) }) {
                         Icon(Icons.Filled.Share, contentDescription = t("share_plan", lang), tint = AccentOrange, modifier = Modifier.size(18.dp))
                     }
                     CompletionBadge(completed = workout.completed, lang = lang)
@@ -200,7 +200,7 @@ private fun BlockRow(block: TrainingBlock, lang: Lang, onExerciseClick: (Exercis
                     .padding(vertical = 2.dp)
             ) {
                 Icon(Icons.Filled.PlayCircleOutline, contentDescription = null, tint = AccentOrange, modifier = Modifier.size(14.dp))
-                Text("${ex.name} — $amount", color = TextDim, fontSize = 13.sp)
+                Text("${t(ex.name, lang)} — $amount", color = TextDim, fontSize = 13.sp)
             }
         }
     }

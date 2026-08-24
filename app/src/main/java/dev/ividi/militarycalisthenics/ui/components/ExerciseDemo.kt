@@ -103,7 +103,7 @@ fun ExerciseDetailDialog(exercise: ExerciseSet, lang: Lang, onDismiss: () -> Uni
                 horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                Text(exercise.name, color = TextPrimary, fontWeight = FontWeight.Black, fontSize = 20.sp, textAlign = TextAlign.Center)
+                Text(t(exercise.name, lang), color = TextPrimary, fontWeight = FontWeight.Black, fontSize = 20.sp, textAlign = TextAlign.Center)
                 ExerciseDemo(category, modifier = Modifier.size(200.dp))
                 Text(
                     text = t(cueKeyForCategory(category), lang),

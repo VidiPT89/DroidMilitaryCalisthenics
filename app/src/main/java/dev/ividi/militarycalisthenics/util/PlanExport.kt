@@ -13,7 +13,7 @@ import java.io.File
 /** Builds a plain-text rendering of a single day's workout, suitable for sharing. */
 fun DailyWorkout.toShareText(lang: Lang): String {
     val builder = StringBuilder()
-    builder.appendLine("${t("day", lang)} ${dayIndex + 1} — $title")
+    builder.appendLine("${t("day", lang)} ${dayIndex + 1} — ${t(title, lang)}")
     blocks.forEach { block ->
         val label = when (block.type) {
             BlockType.WARM_UP -> t("warm_up", lang)
@@ -30,7 +30,7 @@ fun DailyWorkout.toShareText(lang: Lang): String {
                 ex.seconds != null -> "${ex.sets}x${ex.seconds}${t("seconds", lang)}"
                 else -> "${ex.sets} ${t("sets", lang)}"
             }
-            builder.appendLine("- ${ex.name}: $amount")
+            builder.appendLine("- ${t(ex.name, lang)}: $amount")
         }
     }
     return builder.toString()

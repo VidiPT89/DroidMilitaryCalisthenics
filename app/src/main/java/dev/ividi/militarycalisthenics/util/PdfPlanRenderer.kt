@@ -49,7 +49,7 @@ object PdfPlanRenderer {
         var y = MARGIN + 10f
         canvas.drawText("${t("week", lang)} ${weekIndex + 1} · ${t("day", lang)} ${workout.dayIndex + 1}", MARGIN, y, subtitlePaint)
         y += 26f
-        canvas.drawText(workout.title, MARGIN, y, titlePaint)
+        canvas.drawText(t(workout.title, lang), MARGIN, y, titlePaint)
         y += 30f
 
         workout.blocks.forEach { block ->
@@ -68,7 +68,7 @@ object PdfPlanRenderer {
                     ex.seconds != null -> "${ex.sets}x${ex.seconds}${t("seconds", lang)}"
                     else -> "${ex.sets} ${t("sets", lang)}"
                 }
-                canvas.drawText("• ${ex.name} — $amount", MARGIN + 8f, y, bodyPaint)
+                canvas.drawText("• ${t(ex.name, lang)} — $amount", MARGIN + 8f, y, bodyPaint)
                 y += 16f
             }
             y += 10f

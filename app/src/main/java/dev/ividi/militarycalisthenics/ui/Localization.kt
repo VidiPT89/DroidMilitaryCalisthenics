@@ -84,13 +84,70 @@ private val strings: Map<String, Pair<String, String>> = mapOf(
     "reminder_notification_title" to ("Hora de treinar" to "Time to train"),
     "reminder_notification_body" to ("O teu plano de calistenia militar está à tua espera." to "Your military calisthenics plan is waiting for you."),
     "notifications_denied" to ("Permite notificações nas definições do sistema para receber lembretes." to "Allow notifications in system settings to receive reminders."),
-    "pending" to ("Pendente" to "Pending")
+    "pending" to ("Pendente" to "Pending"),
+
+    // Day/block focus titles (PlanEngine.dayTitle) — English text is the stable key.
+    "Full Body Burn" to ("Queima Corpo Inteiro" to "Full Body Burn"),
+    "Metabolic Circuit" to ("Circuito Metabólico" to "Metabolic Circuit"),
+    "Core & Cardio" to ("Core & Cardio" to "Core & Cardio"),
+    "Total Conditioning" to ("Condicionamento Total" to "Total Conditioning"),
+    "Endurance Push" to ("Impulso de Resistência" to "Endurance Push"),
+    "Active Recovery" to ("Recuperação Ativa" to "Active Recovery"),
+    "Push Strength" to ("Força de Empurrar" to "Push Strength"),
+    "Pull Strength" to ("Força de Puxar" to "Pull Strength"),
+    "Legs & Core" to ("Pernas & Core" to "Legs & Core"),
+    "Upper Power" to ("Potência Superior" to "Upper Power"),
+    "Full Body Strength" to ("Força Corpo Inteiro" to "Full Body Strength"),
+    "Grip & Core" to ("Pega & Core" to "Grip & Core"),
+    "Selection Prep" to ("Preparação para Seleção" to "Selection Prep"),
+    "Ruck & Core" to ("Marcha com Carga & Core" to "Ruck & Core"),
+    "Speed Endurance" to ("Resistência de Velocidade" to "Speed Endurance"),
+    "Combat Circuit" to ("Circuito de Combate" to "Combat Circuit"),
+    "Max Reps Test" to ("Teste de Repetições Máximas" to "Max Reps Test"),
+    "Recovery Mobility" to ("Mobilidade de Recuperação" to "Recovery Mobility"),
+    "Mobility Flow" to ("Fluxo de Mobilidade" to "Mobility Flow"),
+    "Control & Balance" to ("Controlo & Equilíbrio" to "Control & Balance"),
+    "Light Strength" to ("Força Leve" to "Light Strength"),
+    "Joint Health" to ("Saúde Articular" to "Joint Health"),
+    "Full Body Flow" to ("Fluxo Corpo Inteiro" to "Full Body Flow"),
+    "Active Stretch" to ("Alongamento Ativo" to "Active Stretch"),
+
+    // Exercise names (PlanEngine blocks) — English text is the stable key.
+    "Jumping Jacks" to ("Polichinelos" to "Jumping Jacks"),
+    "Arm Circles" to ("Círculos de Braços" to "Arm Circles"),
+    "Bodyweight Squats" to ("Agachamentos com Peso do Corpo" to "Bodyweight Squats"),
+    "Hip Openers" to ("Abertura de Anca" to "Hip Openers"),
+    "Push-ups" to ("Flexões" to "Push-ups"),
+    "Pull-ups" to ("Dominadas" to "Pull-ups"),
+    "Inverted Rows / Table Rows" to ("Remo Invertido / Remo de Mesa" to "Inverted Rows / Table Rows"),
+    "Parallel Bar Dips" to ("Fundos em Paralelas" to "Parallel Bar Dips"),
+    "Bench Dips" to ("Fundos no Banco" to "Bench Dips"),
+    "Lunges" to ("Avanços" to "Lunges"),
+    "Burpees" to ("Burpees" to "Burpees"),
+    "Mountain Climbers" to ("Escaladores" to "Mountain Climbers"),
+    "Sprint Intervals" to ("Sprints Intervalados" to "Sprint Intervals"),
+    "High Knees" to ("Joelhos Altos" to "High Knees"),
+    "Jump Squats" to ("Agachamentos com Salto" to "Jump Squats"),
+    "Pike Push-ups" to ("Flexões em Pique" to "Pike Push-ups"),
+    "Explosive Push-ups" to ("Flexões Explosivas" to "Explosive Push-ups"),
+    "World's Greatest Stretch" to ("O Maior Alongamento" to "World's Greatest Stretch"),
+    "Cat-Cow" to ("Gato-Vaca" to "Cat-Cow"),
+    "Bodyweight Good Mornings" to ("Good Mornings com Peso do Corpo" to "Bodyweight Good Mornings"),
+    "Plank" to ("Prancha" to "Plank"),
+    "Leg Raises" to ("Elevação de Pernas" to "Leg Raises"),
+    "Russian Twists" to ("Rotação Russa" to "Russian Twists"),
+    "Deep Breathing" to ("Respiração Profunda" to "Deep Breathing"),
+    "Hamstring Stretch" to ("Alongamento de Isquiotibiais" to "Hamstring Stretch"),
+    "Shoulder Stretch" to ("Alongamento de Ombros" to "Shoulder Stretch")
 )
 
 fun t(key: String, lang: Lang): String {
     val pair = strings[key] ?: return key
     return if (lang == Lang.PT) pair.first else pair.second
 }
+
+/** Exposed for tests only: lets us assert full PT/EN coverage of plan-engine content. */
+internal fun hasTranslation(key: String): Boolean = strings.containsKey(key)
 
 val LocalLang = compositionLocalOf { Lang.PT }
 
