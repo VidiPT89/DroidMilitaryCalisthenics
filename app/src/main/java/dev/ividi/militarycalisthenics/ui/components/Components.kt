@@ -152,13 +152,14 @@ fun ProgressRing(progress: Float, modifier: Modifier = Modifier, sizeDp: Int = 9
 }
 
 @Composable
-fun CompletionBadge(completed: Boolean) {
+fun CompletionBadge(completed: Boolean, lang: dev.ividi.militarycalisthenics.ui.Lang) {
     val bg by animateColorAsState(
         targetValue = if (completed) ColorOk.copy(alpha = 0.15f) else BgPanel2,
         label = "badgeBg"
     )
     val fg = if (completed) ColorOk else TextFaint
-    val width by animateDpAsState(targetValue = if (completed) 96.dp else 88.dp, label = "badgeWidth")
+    val label = if (completed) "✓ ${dev.ividi.militarycalisthenics.ui.t("completed", lang)}" else dev.ividi.militarycalisthenics.ui.t("pending", lang)
+    val width by animateDpAsState(targetValue = if (completed) 108.dp else 96.dp, label = "badgeWidth")
 
     Box(
         modifier = Modifier
@@ -168,7 +169,7 @@ fun CompletionBadge(completed: Boolean) {
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = if (completed) "✓ Done" else "Pending",
+            text = label,
             color = fg,
             fontSize = 12.sp,
             fontWeight = FontWeight.Bold

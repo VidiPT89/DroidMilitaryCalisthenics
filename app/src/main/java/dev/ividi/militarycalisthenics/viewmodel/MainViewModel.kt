@@ -25,6 +25,12 @@ class MainViewModel(private val repository: PlanRepository) : ViewModel() {
     private val _weightHistory = MutableStateFlow<List<WeightEntry>>(emptyList())
     val weightHistory: StateFlow<List<WeightEntry>> = _weightHistory.asStateFlow()
 
+    private val _remindersEnabled = MutableStateFlow(false)
+    val remindersEnabled: StateFlow<Boolean> = _remindersEnabled.asStateFlow()
+
+    private val _reminderHour = MutableStateFlow(18)
+    val reminderHour: StateFlow<Int> = _reminderHour.asStateFlow()
+
     init {
         viewModelScope.launch {
             _plan.value = repository.currentPlan()
@@ -35,6 +41,18 @@ class MainViewModel(private val repository: PlanRepository) : ViewModel() {
         viewModelScope.launch {
             repository.weightHistoryFlow.collect { _weightHistory.value = it }
         }
+        viewModelScope.launch {
+            repository.remindersEnabledFlow.collect { _remindersEnabled.value = it }
+        }
+        viewModelScope.launch {
+            repository.reminderHourFlow.collect { _reminderHour.value = it }
+        }
+    }
+
+    fun setReminders(enabled: Boolean, hour: Int) {
+        _remindersEnabled.value = enabled
+        _reminderHour.value = hour
+        viewModelScope.launch { repository.setReminderPreference(enabled, hour) }
     }
 
     fun generatePlan(profile: UserProfile) {

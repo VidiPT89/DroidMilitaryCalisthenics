@@ -17,6 +17,8 @@
 - ✅ Fully offline, plan and progress saved locally
 - ✅ Dark, brand-consistent UI (orange / burnt yellow / near-black)
 - ✅ Custom adaptive app icon matching the in-app splash mark
+- ✅ Share any day, or export a full week as a PDF, straight from the plan screen
+- ✅ Optional daily workout reminder notifications, with your choice of time
 
 ## 🛠️ Tech Stack
 
@@ -70,6 +72,10 @@ weight-log recalibration path.
 ## 📄 License
 
 Distributed under the MIT License. See [LICENSE](LICENSE) for details.
+
+## 🔒 Privacy
+
+All data stays on your device — nothing is ever transmitted anywhere. See [PRIVACY.md](PRIVACY.md) for details.
 
 ## 👨‍💻 Author
 

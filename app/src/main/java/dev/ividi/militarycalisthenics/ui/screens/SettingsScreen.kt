@@ -1,5 +1,8 @@
 package dev.ividi.militarycalisthenics.ui.screens
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -11,6 +14,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -19,10 +24,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import dev.ividi.militarycalisthenics.notifications.ReminderScheduler
 import dev.ividi.militarycalisthenics.ui.Lang
 import dev.ividi.militarycalisthenics.ui.components.SectionCard
 import dev.ividi.militarycalisthenics.ui.components.SelectableChip
@@ -32,15 +42,44 @@ import dev.ividi.militarycalisthenics.ui.theme.BgPanel2
 import dev.ividi.militarycalisthenics.ui.theme.TextDim
 import dev.ividi.militarycalisthenics.ui.theme.TextPrimary
 
+private val REMINDER_HOURS = listOf(6, 8, 12, 18, 20)
+
 @Composable
 fun SettingsScreen(
     lang: Lang,
     onLangChange: (Lang) -> Unit,
     onResetProfile: () -> Unit,
     onOpenProgress: () -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    remindersEnabled: Boolean,
+    reminderHour: Int,
+    onRemindersChange: (enabled: Boolean, hour: Int) -> Unit
 ) {
     val uriHandler = LocalUriHandler.current
+    val context = LocalContext.current
+
+    val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (granted) {
+            ReminderScheduler.schedule(context, reminderHour, lang = lang)
+            onRemindersChange(true, reminderHour)
+        }
+    }
+
+    fun enableReminders(hour: Int) {
+        val hasPermission = Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+        if (hasPermission) {
+            ReminderScheduler.schedule(context, hour, lang = lang)
+            onRemindersChange(true, hour)
+        } else {
+            permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
+
+    fun disableReminders() {
+        ReminderScheduler.cancel(context)
+        onRemindersChange(false, reminderHour)
+    }
 
     Column(modifier = Modifier.fillMaxSize().padding(24.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -65,6 +104,36 @@ fun SettingsScreen(
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(t("progress", lang), color = TextPrimary, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
                     SelectableChip(t("log_weight", lang), selected = false, onClick = onOpenProgress)
+                }
+            }
+
+            SectionCard(modifier = Modifier.fillMaxWidth()) {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(Modifier.weight(1f)) {
+                            Text(t("reminders", lang), color = TextPrimary, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
+                            Text(t("reminders_subtitle", lang), color = TextDim, fontSize = 12.sp)
+                        }
+                        Switch(
+                            checked = remindersEnabled,
+                            onCheckedChange = { checked -> if (checked) enableReminders(reminderHour) else disableReminders() },
+                            colors = SwitchDefaults.colors(checkedTrackColor = AccentOrange)
+                        )
+                    }
+                    if (remindersEnabled) {
+                        Text(t("reminder_time", lang), color = TextDim, fontSize = 12.sp)
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            REMINDER_HOURS.forEach { hour ->
+                                SelectableChip("%02d:00".format(hour), reminderHour == hour) {
+                                    enableReminders(hour)
+                                }
+                            }
+                        }
+                    }
                 }
             }
 

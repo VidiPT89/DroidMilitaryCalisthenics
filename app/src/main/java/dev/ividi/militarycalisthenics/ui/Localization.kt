@@ -76,7 +76,15 @@ private val strings: Map<String, Pair<String, String>> = mapOf(
     "cue_leg_raise" to ("Deitado, sobe as pernas esticadas sem levantar as costas." to "Lying down, raise your straight legs without lifting your lower back."),
     "cue_twist" to ("Sentado, gira o tronco de um lado para o outro." to "Seated, rotate your torso from side to side."),
     "cue_jumping_jack" to ("Salta abrindo pernas e braços ao mesmo tempo." to "Jump while spreading your arms and legs at the same time."),
-    "cue_stretch" to ("Movimento suave e controlado, sem forçar a articulação." to "Move slowly and with control, never forcing the joint.")
+    "cue_stretch" to ("Movimento suave e controlado, sem forçar a articulação." to "Move slowly and with control, never forcing the joint."),
+    "share_plan" to ("Partilhar" to "Share"),
+    "reminders" to ("Lembretes de treino" to "Workout reminders"),
+    "reminders_subtitle" to ("Recebe uma notificação diária à hora escolhida." to "Get a daily notification at the chosen time."),
+    "reminder_time" to ("Hora do lembrete" to "Reminder time"),
+    "reminder_notification_title" to ("Hora de treinar" to "Time to train"),
+    "reminder_notification_body" to ("O teu plano de calistenia militar está à tua espera." to "Your military calisthenics plan is waiting for you."),
+    "notifications_denied" to ("Permite notificações nas definições do sistema para receber lembretes." to "Allow notifications in system settings to receive reminders."),
+    "pending" to ("Pendente" to "Pending")
 )
 
 fun t(key: String, lang: Lang): String {

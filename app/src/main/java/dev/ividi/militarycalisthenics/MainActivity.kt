@@ -47,6 +47,8 @@ class MainActivity : ComponentActivity() {
                 val plan by viewModel.plan.collectAsState()
                 val lang by viewModel.lang.collectAsState()
                 val weightHistory by viewModel.weightHistory.collectAsState()
+                val remindersEnabled by viewModel.remindersEnabled.collectAsState()
+                val reminderHour by viewModel.reminderHour.collectAsState()
                 var screen by remember { mutableStateOf(Screen.SPLASH) }
 
                 ProvideLang(lang) {
@@ -93,7 +95,10 @@ class MainActivity : ComponentActivity() {
                                         screen = Screen.ONBOARDING
                                     },
                                     onOpenProgress = { screen = Screen.PROGRESS },
-                                    onBack = { screen = Screen.PLAN }
+                                    onBack = { screen = Screen.PLAN },
+                                    remindersEnabled = remindersEnabled,
+                                    reminderHour = reminderHour,
+                                    onRemindersChange = viewModel::setReminders
                                 )
                             }
                             Screen.PROGRESS -> {

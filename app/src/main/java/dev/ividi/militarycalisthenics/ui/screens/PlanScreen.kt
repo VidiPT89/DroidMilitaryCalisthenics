@@ -23,6 +23,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayCircleOutline
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -31,6 +32,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -49,6 +51,9 @@ import dev.ividi.militarycalisthenics.ui.t
 import dev.ividi.militarycalisthenics.ui.theme.AccentOrange
 import dev.ividi.militarycalisthenics.ui.theme.TextDim
 import dev.ividi.militarycalisthenics.ui.theme.TextPrimary
+import dev.ividi.militarycalisthenics.util.sharePlanAsPdf
+import dev.ividi.militarycalisthenics.util.shareAsText
+import dev.ividi.militarycalisthenics.util.toShareText
 
 @Composable
 fun PlanScreen(
@@ -62,6 +67,7 @@ fun PlanScreen(
     val week = plan.weeks.getOrNull(selectedWeek) ?: plan.weeks.first()
     val completedCount = week.workouts.count { it.completed }
     val progress = if (week.workouts.isEmpty()) 0f else completedCount.toFloat() / week.workouts.size
+    val context = LocalContext.current
 
     demoExercise?.let { exercise ->
         ExerciseDetailDialog(exercise = exercise, lang = lang, onDismiss = { demoExercise = null })
@@ -76,8 +82,13 @@ fun PlanScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(t("your_plan", lang), color = TextPrimary, fontWeight = FontWeight.Black, fontSize = 24.sp)
-            IconButton(onClick = onOpenSettings) {
-                Icon(Icons.Filled.Settings, contentDescription = t("settings", lang), tint = AccentOrange)
+            Row {
+                IconButton(onClick = { sharePlanAsPdf(context, week, lang) }) {
+                    Icon(Icons.Filled.Share, contentDescription = t("share_plan", lang), tint = AccentOrange)
+                }
+                IconButton(onClick = onOpenSettings) {
+                    Icon(Icons.Filled.Settings, contentDescription = t("settings", lang), tint = AccentOrange)
+                }
             }
         }
 
@@ -132,6 +143,7 @@ private fun WorkoutCard(
     onToggle: () -> Unit,
     onExerciseClick: (ExerciseSet) -> Unit
 ) {
+    val context = LocalContext.current
     SectionCard(modifier = Modifier.fillMaxWidth()) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(
@@ -143,7 +155,12 @@ private fun WorkoutCard(
                     Text("${t("day", lang)} ${workout.dayIndex + 1}", color = TextDim, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                     Text(workout.title, color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 17.sp)
                 }
-                CompletionBadge(completed = workout.completed)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = { shareAsText(context, workout.title, workout.toShareText(lang)) }) {
+                        Icon(Icons.Filled.Share, contentDescription = t("share_plan", lang), tint = AccentOrange, modifier = Modifier.size(18.dp))
+                    }
+                    CompletionBadge(completed = workout.completed, lang = lang)
+                }
             }
 
             workout.blocks.forEach { block -> BlockRow(block, lang, onExerciseClick) }

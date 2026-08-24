@@ -1,7 +1,9 @@
 package dev.ividi.militarycalisthenics.data
 
 import android.content.Context
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import dev.ividi.militarycalisthenics.model.TrainingPlan
@@ -18,6 +20,8 @@ private val Context.dataStore by preferencesDataStore(name = "military_calisthen
 private val PLAN_KEY = stringPreferencesKey("training_plan")
 private val LANG_KEY = stringPreferencesKey("language")
 private val WEIGHT_HISTORY_KEY = stringPreferencesKey("weight_history")
+private val REMINDERS_ENABLED_KEY = booleanPreferencesKey("reminders_enabled")
+private val REMINDER_HOUR_KEY = intPreferencesKey("reminder_hour")
 
 private val json = Json { ignoreUnknownKeys = true }
 
@@ -63,6 +67,16 @@ class PlanRepository(private val context: Context) {
             }.orEmpty()
             val updated = (current + entry).sortedBy { it.timestampMillis }
             prefs[WEIGHT_HISTORY_KEY] = json.encodeToString(updated)
+        }
+    }
+
+    val remindersEnabledFlow: Flow<Boolean> = context.dataStore.data.map { it[REMINDERS_ENABLED_KEY] ?: false }
+    val reminderHourFlow: Flow<Int> = context.dataStore.data.map { it[REMINDER_HOUR_KEY] ?: 18 }
+
+    suspend fun setReminderPreference(enabled: Boolean, hour: Int) {
+        context.dataStore.edit { prefs ->
+            prefs[REMINDERS_ENABLED_KEY] = enabled
+            prefs[REMINDER_HOUR_KEY] = hour
         }
     }
 }
