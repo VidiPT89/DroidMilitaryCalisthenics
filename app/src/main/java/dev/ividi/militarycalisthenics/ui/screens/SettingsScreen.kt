@@ -18,9 +18,13 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.OpenInNew
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -58,10 +62,15 @@ fun SettingsScreen(
     val uriHandler = LocalUriHandler.current
     val context = LocalContext.current
 
+    var permissionDenied by remember { mutableStateOf(false) }
+
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (granted) {
+            permissionDenied = false
             ReminderScheduler.schedule(context, reminderHour, lang = lang)
             onRemindersChange(true, reminderHour)
+        } else {
+            permissionDenied = true
         }
     }
 
@@ -84,7 +93,7 @@ fun SettingsScreen(
     Column(modifier = Modifier.fillMaxSize().padding(24.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             IconButton(onClick = onBack) {
-                Icon(Icons.Filled.ArrowBack, contentDescription = null, tint = AccentOrange)
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = t("back", lang), tint = AccentOrange)
             }
             Text(t("settings", lang), color = TextPrimary, fontWeight = FontWeight.Black, fontSize = 22.sp)
         }
@@ -134,6 +143,9 @@ fun SettingsScreen(
                             }
                         }
                     }
+                    if (permissionDenied) {
+                        Text(t("notifications_denied", lang), color = TextDim, fontSize = 12.sp)
+                    }
                 }
             }
 
@@ -172,6 +184,6 @@ private fun LinkRow(label: String, url: String, onClick: () -> Unit) {
             Text(label, color = TextPrimary, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
             Text(url, color = TextDim, fontSize = 12.sp)
         }
-        Icon(Icons.Filled.OpenInNew, contentDescription = null, tint = AccentOrange)
+        Icon(Icons.AutoMirrored.Filled.OpenInNew, contentDescription = null, tint = AccentOrange)
     }
 }

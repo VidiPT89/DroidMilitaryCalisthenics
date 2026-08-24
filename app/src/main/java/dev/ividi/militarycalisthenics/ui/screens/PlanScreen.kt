@@ -114,19 +114,19 @@ fun PlanScreen(
         }
 
         AnimatedContent(
-            targetState = selectedWeek,
+            targetState = week,
             transitionSpec = { fadeIn(tween(250)) togetherWith fadeOut(tween(150)) },
             label = "weekContent"
-        ) { _ ->
+        ) { targetWeek ->
             LazyColumn(
                 contentPadding = PaddingValues(horizontal = 24.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                items(week.workouts) { workout ->
+                items(targetWeek.workouts) { workout ->
                     WorkoutCard(
                         workout = workout,
                         lang = lang,
-                        onToggle = { onToggleCompleted(week.weekIndex, workout.dayIndex) },
+                        onToggle = { onToggleCompleted(targetWeek.weekIndex, workout.dayIndex) },
                         onExerciseClick = { demoExercise = it }
                     )
                 }

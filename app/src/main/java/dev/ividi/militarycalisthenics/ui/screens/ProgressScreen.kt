@@ -11,7 +11,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
@@ -71,7 +71,7 @@ fun ProgressScreen(
         item {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 IconButton(onClick = onBack) {
-                    Icon(Icons.Filled.ArrowBack, contentDescription = null, tint = AccentOrange)
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = t("back", lang), tint = AccentOrange)
                 }
                 Text(t("progress", lang), color = TextPrimary, fontWeight = FontWeight.Black, fontSize = 22.sp)
             }
