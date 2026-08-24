@@ -16,6 +16,7 @@
 - ✅ In-app PT-PT / EN language switch, independent of system locale
 - ✅ Fully offline, plan and progress saved locally
 - ✅ Dark, brand-consistent UI (orange / burnt yellow / near-black)
+- ✅ Custom adaptive app icon matching the in-app splash mark
 
 ## 🛠️ Tech Stack
 
@@ -57,8 +58,14 @@ emulator or device (minimum SDK 26).
 
 ## 🧪 Testing
 
-No automated test suite yet — the plan engine logic is isolated in
-`planengine/PlanEngine.kt` so unit tests can be added independently of the UI.
+`PlanEngine` has a JVM unit test suite (`app/src/test`) covering plan
+generation across the full input matrix (age, weight, level, goal,
+equipment, days/week), level- and BMI-driven calibration, and the
+weight-log recalibration path.
+
+```bash
+./gradlew :app:testDebugUnitTest
+```
 
 ## 📄 License
 
