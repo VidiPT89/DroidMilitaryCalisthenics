@@ -65,8 +65,8 @@ enum class ExerciseDemoCategory(val poseA: StickPose, val poseB: StickPose, val 
         poseB = StickPose(Offset(.52f, .16f), Offset(.52f, .26f), Offset(.50f, .48f), Offset(.58f, .35f), Offset(.62f, .45f), Offset(.58f, .40f), Offset(.55f, .55f))
     ),
     PLANK(
-        poseA = StickPose(Offset(.18f, .42f), Offset(.28f, .45f), Offset(.60f, .46f), Offset(.28f, .58f), Offset(.30f, .72f), Offset(.78f, .47f), Offset(.92f, .48f)),
-        poseB = StickPose(Offset(.18f, .43f), Offset(.28f, .46f), Offset(.60f, .47f), Offset(.28f, .59f), Offset(.30f, .73f), Offset(.78f, .48f), Offset(.92f, .49f))
+        poseA = StickPose(Offset(.18f, .41f), Offset(.28f, .44f), Offset(.60f, .45f), Offset(.28f, .57f), Offset(.30f, .71f), Offset(.78f, .46f), Offset(.92f, .47f)),
+        poseB = StickPose(Offset(.18f, .45f), Offset(.28f, .48f), Offset(.60f, .49f), Offset(.28f, .61f), Offset(.30f, .75f), Offset(.78f, .50f), Offset(.92f, .51f))
     ),
     LEG_RAISE(
         poseA = StickPose(Offset(.15f, .50f), Offset(.25f, .50f), Offset(.45f, .50f), Offset(.20f, .55f), Offset(.15f, .60f), Offset(.65f, .55f), Offset(.85f, .58f)),

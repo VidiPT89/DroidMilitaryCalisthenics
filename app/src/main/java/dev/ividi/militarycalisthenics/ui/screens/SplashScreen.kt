@@ -75,31 +75,33 @@ fun SplashScreen(onFinished: () -> Unit) {
                 Canvas(modifier = Modifier.size(56.dp)) {
                     val w = size.width
                     val h = size.height
-                    val chevron = Path().apply {
-                        moveTo(w * 0.53f, h * 0.06f)
-                        lineTo(w * 0.86f, h * 0.40f)
-                        lineTo(w * 0.72f, h * 0.40f)
-                        lineTo(w * 0.53f, h * 0.20f)
-                        lineTo(w * 0.34f, h * 0.40f)
-                        lineTo(w * 0.20f, h * 0.40f)
+                    val stroke = androidx.compose.ui.graphics.drawscope.Stroke(
+                        width = w * 0.075f,
+                        cap = androidx.compose.ui.graphics.StrokeCap.Round
+                    )
+
+                    // Military rank star, top third.
+                    val star = Path().apply {
+                        val cx = w * 0.5f
+                        val cy = h * 0.24f
+                        val outerR = w * 0.16f
+                        val innerR = w * 0.065f
+                        for (i in 0 until 10) {
+                            val angle = (-Math.PI / 2 + i * Math.PI / 5).toFloat()
+                            val r = if (i % 2 == 0) outerR else innerR
+                            val x = cx + r * kotlin.math.cos(angle)
+                            val y = cy + r * kotlin.math.sin(angle)
+                            if (i == 0) moveTo(x, y) else lineTo(x, y)
+                        }
                         close()
                     }
-                    drawPath(chevron, color = BgBase)
-                    drawRect(
-                        color = BgBase,
-                        topLeft = Offset(w * 0.30f, h * 0.50f),
-                        size = androidx.compose.ui.geometry.Size(w * 0.40f, h * 0.10f)
-                    )
-                    drawRect(
-                        color = BgBase,
-                        topLeft = Offset(w * 0.16f, h * 0.42f),
-                        size = androidx.compose.ui.geometry.Size(w * 0.10f, h * 0.26f)
-                    )
-                    drawRect(
-                        color = BgBase,
-                        topLeft = Offset(w * 0.74f, h * 0.42f),
-                        size = androidx.compose.ui.geometry.Size(w * 0.10f, h * 0.26f)
-                    )
+                    drawPath(star, color = BgBase)
+
+                    // Push-up figure, side view: head, torso to hip, bent support arm.
+                    drawCircle(BgBase, radius = w * 0.09f, center = Offset(w * 0.28f, h * 0.55f))
+                    drawLine(BgBase, Offset(w * 0.30f, h * 0.55f), Offset(w * 0.66f, h * 0.62f), strokeWidth = stroke.width, cap = stroke.cap)
+                    drawLine(BgBase, Offset(w * 0.66f, h * 0.62f), Offset(w * 0.84f, h * 0.56f), strokeWidth = stroke.width, cap = stroke.cap)
+                    drawLine(BgBase, Offset(w * 0.38f, h * 0.57f), Offset(w * 0.36f, h * 0.72f), strokeWidth = stroke.width, cap = stroke.cap)
                 }
             }
             Text(

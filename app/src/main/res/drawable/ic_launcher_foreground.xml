@@ -3,25 +3,27 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
+    <!-- Military rank star -->
     <path
         android:fillColor="#FCBB00"
-        android:pathData="M57.84,25.20 L37.84,49.20 L30.16,42.80 L50.16,18.80 Z" />
+        android:pathData="M54.0,23.0 L56.12,29.09 L62.56,29.22 L57.42,33.11 L59.29,39.28 L54.0,35.6 L48.71,39.28 L50.58,33.11 L45.44,29.22 L51.88,29.09 Z" />
+    <!-- Push-up figure, side view: head - torso - hip - bent support arm - legs -->
+    <path
+        android:strokeColor="#F99C00"
+        android:strokeWidth="6.2"
+        android:strokeLineCap="round"
+        android:pathData="M32,58 L68,66" />
+    <path
+        android:strokeColor="#F99C00"
+        android:strokeWidth="6.2"
+        android:strokeLineCap="round"
+        android:pathData="M68,66 L86,60" />
+    <path
+        android:strokeColor="#FCBB00"
+        android:strokeWidth="6.2"
+        android:strokeLineCap="round"
+        android:pathData="M40,60 L38,74 L34,84" />
     <path
         android:fillColor="#FCBB00"
-        android:pathData="M50.16,25.20 L70.16,49.20 L77.84,42.80 L57.84,18.80 Z" />
-    <path
-        android:fillColor="#F99C00"
-        android:pathData="M30,46 L30,62 L24,62 L24,46 Z" />
-    <path
-        android:fillColor="#F99C00"
-        android:pathData="M84,46 L84,62 L78,62 L78,46 Z" />
-    <path
-        android:fillColor="#FCBB00"
-        android:pathData="M36,50 L72,50 L72,58 L36,58 Z" />
-    <path
-        android:fillColor="#F99C00"
-        android:pathData="M20,42 L28,42 L28,66 L20,66 Z" />
-    <path
-        android:fillColor="#F99C00"
-        android:pathData="M80,42 L88,42 L88,66 L80,66 Z" />
+        android:pathData="M32,58 m-6.6,0 a6.6,6.6 0 1,0 13.2,0 a6.6,6.6 0 1,0 -13.2,0" />
 </vector>
