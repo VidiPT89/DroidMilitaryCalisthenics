@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import dev.ividi.militarycalisthenics.model.TrainingPlan
+import dev.ividi.militarycalisthenics.model.WeightEntry
 import dev.ividi.militarycalisthenics.ui.Lang
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -16,6 +17,7 @@ private val Context.dataStore by preferencesDataStore(name = "military_calisthen
 
 private val PLAN_KEY = stringPreferencesKey("training_plan")
 private val LANG_KEY = stringPreferencesKey("language")
+private val WEIGHT_HISTORY_KEY = stringPreferencesKey("weight_history")
 
 private val json = Json { ignoreUnknownKeys = true }
 
@@ -47,4 +49,20 @@ class PlanRepository(private val context: Context) {
     }
 
     suspend fun currentPlan(): TrainingPlan? = planFlow.first()
+
+    val weightHistoryFlow: Flow<List<WeightEntry>> = context.dataStore.data.map { prefs ->
+        prefs[WEIGHT_HISTORY_KEY]?.let { raw ->
+            runCatching { json.decodeFromString<List<WeightEntry>>(raw) }.getOrNull()
+        }.orEmpty()
+    }
+
+    suspend fun addWeightEntry(entry: WeightEntry) {
+        context.dataStore.edit { prefs ->
+            val current = prefs[WEIGHT_HISTORY_KEY]?.let {
+                runCatching { json.decodeFromString<List<WeightEntry>>(it) }.getOrNull()
+            }.orEmpty()
+            val updated = (current + entry).sortedBy { it.timestampMillis }
+            prefs[WEIGHT_HISTORY_KEY] = json.encodeToString(updated)
+        }
+    }
 }

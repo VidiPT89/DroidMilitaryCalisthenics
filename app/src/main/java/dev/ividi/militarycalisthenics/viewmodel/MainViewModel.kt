@@ -6,6 +6,7 @@ import dev.ividi.militarycalisthenics.data.PlanRepository
 import dev.ividi.militarycalisthenics.model.TrainingPlan
 import dev.ividi.militarycalisthenics.model.UserProfile
 import dev.ividi.militarycalisthenics.model.WeeklyPlan
+import dev.ividi.militarycalisthenics.model.WeightEntry
 import dev.ividi.militarycalisthenics.planengine.PlanEngine
 import dev.ividi.militarycalisthenics.ui.Lang
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,12 +22,18 @@ class MainViewModel(private val repository: PlanRepository) : ViewModel() {
     private val _lang = MutableStateFlow(Lang.PT)
     val lang: StateFlow<Lang> = _lang.asStateFlow()
 
+    private val _weightHistory = MutableStateFlow<List<WeightEntry>>(emptyList())
+    val weightHistory: StateFlow<List<WeightEntry>> = _weightHistory.asStateFlow()
+
     init {
         viewModelScope.launch {
             _plan.value = repository.currentPlan()
         }
         viewModelScope.launch {
             repository.langFlow.collect { _lang.value = it }
+        }
+        viewModelScope.launch {
+            repository.weightHistoryFlow.collect { _weightHistory.value = it }
         }
     }
 
@@ -60,5 +67,19 @@ class MainViewModel(private val repository: PlanRepository) : ViewModel() {
     fun setLang(lang: Lang) {
         _lang.value = lang
         viewModelScope.launch { repository.setLang(lang) }
+    }
+
+    /**
+     * Logs a new bodyweight reading and regenerates the plan through the same calibration
+     * (weight/BMI signal, age, level, goal), per docs/plan-engine-spec.md.
+     */
+    fun logWeight(weightKg: Double, timestampMillis: Long = System.currentTimeMillis()) {
+        viewModelScope.launch { repository.addWeightEntry(WeightEntry(timestampMillis, weightKg)) }
+
+        val current = _plan.value ?: return
+        val updatedProfile = current.profile.copy(weightKg = weightKg)
+        val recalibrated = PlanEngine.generate(updatedProfile)
+        _plan.value = recalibrated
+        viewModelScope.launch { repository.savePlan(recalibrated) }
     }
 }

@@ -37,6 +37,7 @@ fun SettingsScreen(
     lang: Lang,
     onLangChange: (Lang) -> Unit,
     onResetProfile: () -> Unit,
+    onOpenProgress: () -> Unit,
     onBack: () -> Unit
 ) {
     val uriHandler = LocalUriHandler.current
@@ -57,6 +58,13 @@ fun SettingsScreen(
                         SelectableChip("PT-PT", lang == Lang.PT) { onLangChange(Lang.PT) }
                         SelectableChip("EN", lang == Lang.EN) { onLangChange(Lang.EN) }
                     }
+                }
+            }
+
+            SectionCard(modifier = Modifier.fillMaxWidth()) {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(t("progress", lang), color = TextPrimary, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
+                    SelectableChip(t("log_weight", lang), selected = false, onClick = onOpenProgress)
                 }
             }
 

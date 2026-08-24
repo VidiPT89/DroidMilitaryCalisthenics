@@ -60,6 +60,10 @@ enum class ExerciseDemoCategory(val poseA: StickPose, val poseB: StickPose, val 
         poseA = StickPose(Offset(.20f, .42f), Offset(.30f, .45f), Offset(.60f, .48f), Offset(.28f, .58f), Offset(.30f, .72f), Offset(.78f, .48f), Offset(.92f, .50f)),
         poseB = StickPose(Offset(.20f, .42f), Offset(.30f, .45f), Offset(.60f, .48f), Offset(.28f, .58f), Offset(.30f, .72f), Offset(.68f, .40f), Offset(.70f, .48f))
     ),
+    SPRINT(
+        poseA = StickPose(Offset(.50f, .15f), Offset(.50f, .25f), Offset(.50f, .48f), Offset(.42f, .32f), Offset(.38f, .20f), Offset(.42f, .60f), Offset(.40f, .85f)),
+        poseB = StickPose(Offset(.52f, .16f), Offset(.52f, .26f), Offset(.50f, .48f), Offset(.58f, .35f), Offset(.62f, .45f), Offset(.58f, .40f), Offset(.55f, .55f))
+    ),
     PLANK(
         poseA = StickPose(Offset(.18f, .42f), Offset(.28f, .45f), Offset(.60f, .46f), Offset(.28f, .58f), Offset(.30f, .72f), Offset(.78f, .47f), Offset(.92f, .48f)),
         poseB = StickPose(Offset(.18f, .43f), Offset(.28f, .46f), Offset(.60f, .47f), Offset(.28f, .59f), Offset(.30f, .73f), Offset(.78f, .48f), Offset(.92f, .49f))
@@ -69,8 +73,8 @@ enum class ExerciseDemoCategory(val poseA: StickPose, val poseB: StickPose, val 
         poseB = StickPose(Offset(.15f, .50f), Offset(.25f, .50f), Offset(.45f, .50f), Offset(.20f, .55f), Offset(.15f, .60f), Offset(.50f, .30f), Offset(.55f, .12f))
     ),
     TWIST(
-        poseA = StickPose(Offset(.50f, .25f), Offset(.50f, .32f), Offset(.50f, .60f), Offset(.35f, .40f), Offset(.28f, .45f), Offset(.65f, .65f), Offset(.78f, .60f)),
-        poseB = StickPose(Offset(.50f, .25f), Offset(.50f, .32f), Offset(.50f, .60f), Offset(.65f, .40f), Offset(.72f, .45f), Offset(.65f, .65f), Offset(.78f, .60f))
+        poseA = StickPose(Offset(.20f, .38f), Offset(.30f, .46f), Offset(.55f, .60f), Offset(.38f, .52f), Offset(.25f, .48f), Offset(.75f, .60f), Offset(.90f, .55f)),
+        poseB = StickPose(Offset(.40f, .36f), Offset(.38f, .45f), Offset(.55f, .60f), Offset(.45f, .50f), Offset(.55f, .42f), Offset(.75f, .60f), Offset(.90f, .55f))
     ),
     JUMPING_JACK(
         poseA = StickPose(Offset(.50f, .15f), Offset(.50f, .25f), Offset(.50f, .50f), Offset(.50f, .40f), Offset(.50f, .55f), Offset(.50f, .68f), Offset(.50f, .85f)),
@@ -94,7 +98,8 @@ fun categoryForExerciseName(name: String): ExerciseDemoCategory {
         "dip" in n -> ExerciseDemoCategory.DIP
         "lunge" in n -> ExerciseDemoCategory.LUNGE
         "burpee" in n -> ExerciseDemoCategory.BURPEE
-        "mountain climber" in n || "high knees" in n || "sprint" in n -> ExerciseDemoCategory.MOUNTAIN_CLIMBER
+        "mountain climber" in n -> ExerciseDemoCategory.MOUNTAIN_CLIMBER
+        "high knees" in n || "sprint" in n -> ExerciseDemoCategory.SPRINT
         "plank" in n -> ExerciseDemoCategory.PLANK
         "leg raise" in n -> ExerciseDemoCategory.LEG_RAISE
         "twist" in n -> ExerciseDemoCategory.TWIST
@@ -113,6 +118,7 @@ fun cueKeyForCategory(category: ExerciseDemoCategory): String = when (category) 
     ExerciseDemoCategory.LUNGE -> "cue_lunge"
     ExerciseDemoCategory.BURPEE -> "cue_burpee"
     ExerciseDemoCategory.MOUNTAIN_CLIMBER -> "cue_mountain_climber"
+    ExerciseDemoCategory.SPRINT -> "cue_sprint"
     ExerciseDemoCategory.PLANK -> "cue_plank"
     ExerciseDemoCategory.LEG_RAISE -> "cue_leg_raise"
     ExerciseDemoCategory.TWIST -> "cue_twist"

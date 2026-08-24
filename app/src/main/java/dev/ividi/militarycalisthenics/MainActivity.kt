@@ -25,6 +25,7 @@ import dev.ividi.militarycalisthenics.data.PlanRepository
 import dev.ividi.militarycalisthenics.ui.ProvideLang
 import dev.ividi.militarycalisthenics.ui.screens.OnboardingScreen
 import dev.ividi.militarycalisthenics.ui.screens.PlanScreen
+import dev.ividi.militarycalisthenics.ui.screens.ProgressScreen
 import dev.ividi.militarycalisthenics.ui.screens.SettingsScreen
 import dev.ividi.militarycalisthenics.ui.screens.SplashScreen
 import dev.ividi.militarycalisthenics.ui.theme.BgBase
@@ -32,7 +33,7 @@ import dev.ividi.militarycalisthenics.ui.theme.MilitaryCalisthenicsTheme
 import dev.ividi.militarycalisthenics.viewmodel.MainViewModel
 import dev.ividi.militarycalisthenics.viewmodel.MainViewModelFactory
 
-private enum class Screen { SPLASH, ONBOARDING, PLAN, SETTINGS }
+private enum class Screen { SPLASH, ONBOARDING, PLAN, SETTINGS, PROGRESS }
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -45,6 +46,7 @@ class MainActivity : ComponentActivity() {
                 val viewModel: MainViewModel = viewModel(factory = MainViewModelFactory(repository))
                 val plan by viewModel.plan.collectAsState()
                 val lang by viewModel.lang.collectAsState()
+                val weightHistory by viewModel.weightHistory.collectAsState()
                 var screen by remember { mutableStateOf(Screen.SPLASH) }
 
                 ProvideLang(lang) {
@@ -90,7 +92,16 @@ class MainActivity : ComponentActivity() {
                                         viewModel.resetProfile()
                                         screen = Screen.ONBOARDING
                                     },
+                                    onOpenProgress = { screen = Screen.PROGRESS },
                                     onBack = { screen = Screen.PLAN }
+                                )
+                            }
+                            Screen.PROGRESS -> {
+                                ProgressScreen(
+                                    lang = lang,
+                                    weightHistory = weightHistory,
+                                    onLogWeight = viewModel::logWeight,
+                                    onBack = { screen = Screen.SETTINGS }
                                 )
                             }
                         }

@@ -75,3 +75,9 @@ data class TrainingPlan(
     val profile: UserProfile,
     val weeks: List<WeeklyPlan>
 )
+
+@Serializable
+data class WeightEntry(
+    val timestampMillis: Long,
+    val weightKg: Double
+)

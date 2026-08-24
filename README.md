@@ -11,7 +11,8 @@
 - ✅ Warm-up, strength, circuit/HIIT, core and cool-down blocks every session
 - ✅ Volume and intensity auto-calibrated from level, age and BMI signal
 - ✅ Animated progress ring, day cards and completion states
-- ✅ Tap any exercise for a looping stick-figure demo and a short coaching cue
+- ✅ Tap any exercise for a looping stick-figure demo and a short coaching cue, correctly oriented (floor exercises horizontal, standing exercises upright)
+- ✅ Log your bodyweight over time and watch the plan recalibrate itself automatically to your goal
 - ✅ In-app PT-PT / EN language switch, independent of system locale
 - ✅ Fully offline, plan and progress saved locally
 - ✅ Dark, brand-consistent UI (orange / burnt yellow / near-black)
