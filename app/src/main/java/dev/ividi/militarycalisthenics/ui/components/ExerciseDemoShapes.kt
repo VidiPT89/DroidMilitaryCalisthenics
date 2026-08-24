@@ -84,6 +84,54 @@ enum class ExerciseDemoCategory(val poseA: StickPose, val poseB: StickPose, val 
     STRETCH_GENERIC(
         poseA = StickPose(Offset(.50f, .15f), Offset(.50f, .25f), Offset(.50f, .50f), Offset(.40f, .15f), Offset(.35f, .05f), Offset(.50f, .68f), Offset(.50f, .85f)),
         poseB = StickPose(Offset(.52f, .16f), Offset(.52f, .26f), Offset(.50f, .50f), Offset(.62f, .16f), Offset(.68f, .08f), Offset(.50f, .68f), Offset(.50f, .85f))
+    ),
+
+    // Standing, arm sweeping through a wide circle in front of the shoulder.
+    ARM_CIRCLES(
+        poseA = StickPose(Offset(.50f, .15f), Offset(.50f, .25f), Offset(.50f, .50f), Offset(.62f, .30f), Offset(.68f, .40f), Offset(.50f, .68f), Offset(.50f, .85f)),
+        poseB = StickPose(Offset(.50f, .15f), Offset(.50f, .25f), Offset(.50f, .50f), Offset(.60f, .12f), Offset(.62f, .02f), Offset(.50f, .68f), Offset(.50f, .85f))
+    ),
+
+    // Standing on one leg, the other knee driven up and rotated out to the side.
+    HIP_OPENERS(
+        poseA = StickPose(Offset(.50f, .15f), Offset(.50f, .25f), Offset(.50f, .48f), Offset(.42f, .32f), Offset(.40f, .42f), Offset(.50f, .68f), Offset(.50f, .85f)),
+        poseB = StickPose(Offset(.48f, .16f), Offset(.48f, .26f), Offset(.50f, .48f), Offset(.42f, .32f), Offset(.40f, .42f), Offset(.75f, .45f), Offset(.65f, .55f))
+    ),
+
+    // Low lunge with the torso rotating open and the arm reaching up toward the ceiling.
+    WORLDS_GREATEST_STRETCH(
+        poseA = StickPose(Offset(.42f, .22f), Offset(.44f, .30f), Offset(.45f, .52f), Offset(.38f, .48f), Offset(.36f, .58f), Offset(.48f, .70f), Offset(.45f, .88f)),
+        poseB = StickPose(Offset(.58f, .10f), Offset(.52f, .22f), Offset(.45f, .52f), Offset(.62f, .12f), Offset(.68f, .02f), Offset(.48f, .70f), Offset(.45f, .88f))
+    ),
+
+    // On hands and knees, spine arching (cow) then rounding up (cat).
+    CAT_COW(
+        poseA = StickPose(Offset(.15f, .35f), Offset(.26f, .40f), Offset(.60f, .48f), Offset(.28f, .50f), Offset(.30f, .68f), Offset(.78f, .55f), Offset(.90f, .65f)),
+        poseB = StickPose(Offset(.20f, .55f), Offset(.28f, .48f), Offset(.58f, .38f), Offset(.28f, .50f), Offset(.30f, .68f), Offset(.78f, .48f), Offset(.90f, .60f))
+    ),
+
+    // Standing hip hinge with a flat back and straight legs — a near-straight-leg deadlift pattern.
+    GOOD_MORNINGS(
+        poseA = StickPose(Offset(.50f, .12f), Offset(.50f, .20f), Offset(.50f, .45f), Offset(.42f, .28f), Offset(.38f, .38f), Offset(.50f, .65f), Offset(.50f, .85f)),
+        poseB = StickPose(Offset(.50f, .35f), Offset(.50f, .40f), Offset(.52f, .47f), Offset(.42f, .42f), Offset(.40f, .52f), Offset(.50f, .66f), Offset(.50f, .85f))
+    ),
+
+    // Relaxed standing pose with the chest visibly rising and the arms drifting outward on the inhale.
+    DEEP_BREATHING(
+        poseA = StickPose(Offset(.50f, .18f), Offset(.50f, .28f), Offset(.50f, .52f), Offset(.44f, .38f), Offset(.42f, .48f), Offset(.50f, .68f), Offset(.50f, .85f)),
+        poseB = StickPose(Offset(.50f, .13f), Offset(.50f, .24f), Offset(.50f, .52f), Offset(.36f, .32f), Offset(.30f, .34f), Offset(.50f, .68f), Offset(.50f, .85f))
+    ),
+
+    // Standing, front leg extended with heel down, torso hinging forward to reach toward the foot.
+    HAMSTRING_STRETCH(
+        poseA = StickPose(Offset(.35f, .20f), Offset(.38f, .28f), Offset(.50f, .50f), Offset(.42f, .40f), Offset(.48f, .48f), Offset(.55f, .62f), Offset(.68f, .78f)),
+        poseB = StickPose(Offset(.55f, .40f), Offset(.55f, .46f), Offset(.50f, .50f), Offset(.55f, .55f), Offset(.65f, .70f), Offset(.55f, .62f), Offset(.68f, .78f))
+    ),
+
+    // Standing, one arm pulled straight across the chest with the opposite hand.
+    SHOULDER_STRETCH(
+        poseA = StickPose(Offset(.50f, .15f), Offset(.50f, .25f), Offset(.50f, .50f), Offset(.42f, .38f), Offset(.40f, .48f), Offset(.50f, .68f), Offset(.50f, .85f)),
+        poseB = StickPose(Offset(.50f, .15f), Offset(.50f, .25f), Offset(.50f, .50f), Offset(.58f, .30f), Offset(.30f, .32f), Offset(.50f, .68f), Offset(.50f, .85f))
     );
 }
 
@@ -104,6 +152,14 @@ fun categoryForExerciseName(name: String): ExerciseDemoCategory {
         "leg raise" in n -> ExerciseDemoCategory.LEG_RAISE
         "twist" in n -> ExerciseDemoCategory.TWIST
         "jumping jack" in n -> ExerciseDemoCategory.JUMPING_JACK
+        "arm circle" in n -> ExerciseDemoCategory.ARM_CIRCLES
+        "hip opener" in n -> ExerciseDemoCategory.HIP_OPENERS
+        "world's greatest stretch" in n -> ExerciseDemoCategory.WORLDS_GREATEST_STRETCH
+        "cat-cow" in n || "cat cow" in n -> ExerciseDemoCategory.CAT_COW
+        "good morning" in n -> ExerciseDemoCategory.GOOD_MORNINGS
+        "deep breathing" in n -> ExerciseDemoCategory.DEEP_BREATHING
+        "hamstring stretch" in n -> ExerciseDemoCategory.HAMSTRING_STRETCH
+        "shoulder stretch" in n -> ExerciseDemoCategory.SHOULDER_STRETCH
         else -> ExerciseDemoCategory.STRETCH_GENERIC
     }
 }
@@ -124,4 +180,12 @@ fun cueKeyForCategory(category: ExerciseDemoCategory): String = when (category) 
     ExerciseDemoCategory.TWIST -> "cue_twist"
     ExerciseDemoCategory.JUMPING_JACK -> "cue_jumping_jack"
     ExerciseDemoCategory.STRETCH_GENERIC -> "cue_stretch"
+    ExerciseDemoCategory.ARM_CIRCLES -> "cue_arm_circles"
+    ExerciseDemoCategory.HIP_OPENERS -> "cue_hip_openers"
+    ExerciseDemoCategory.WORLDS_GREATEST_STRETCH -> "cue_worlds_greatest_stretch"
+    ExerciseDemoCategory.CAT_COW -> "cue_cat_cow"
+    ExerciseDemoCategory.GOOD_MORNINGS -> "cue_good_mornings"
+    ExerciseDemoCategory.DEEP_BREATHING -> "cue_deep_breathing"
+    ExerciseDemoCategory.HAMSTRING_STRETCH -> "cue_hamstring_stretch"
+    ExerciseDemoCategory.SHOULDER_STRETCH -> "cue_shoulder_stretch"
 }

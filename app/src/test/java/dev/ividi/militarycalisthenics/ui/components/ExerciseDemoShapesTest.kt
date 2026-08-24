@@ -44,4 +44,31 @@ class ExerciseDemoShapesTest {
             assertTrue("${category.name} midpoint pose equals poseB", mid != category.poseB)
         }
     }
+
+    /**
+     * Regression guard for exercises collapsing onto a visually identical shared pose
+     * (e.g. several cool-down stretches all rendering as the same generic silhouette).
+     * Compares the midpoint silhouette of every category against every other one.
+     */
+    @Test
+    fun noTwoCategoriesShareANearIdenticalSilhouette() {
+        val categories = ExerciseDemoCategory.entries
+        for (i in categories.indices) {
+            for (j in i + 1 until categories.size) {
+                val a = categories[i]
+                val b = categories[j]
+                val midA = lerpPose(a.poseA, a.poseB, 0.5f)
+                val midB = lerpPose(b.poseA, b.poseB, 0.5f)
+                val joints = listOf(
+                    midA.head to midB.head, midA.neck to midB.neck, midA.hip to midB.hip,
+                    midA.elbow to midB.elbow, midA.hand to midB.hand, midA.knee to midB.knee, midA.foot to midB.foot
+                )
+                val distance = joints.sumOf { (p1, p2) -> hypot((p1.x - p2.x).toDouble(), (p1.y - p2.y).toDouble()) }
+                assertTrue(
+                    "${a.name} and ${b.name} look nearly identical: silhouette distance $distance",
+                    distance >= 0.12
+                )
+            }
+        }
+    }
 }
