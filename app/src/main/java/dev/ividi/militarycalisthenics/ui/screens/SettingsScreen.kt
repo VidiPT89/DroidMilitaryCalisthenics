@@ -53,6 +53,7 @@ fun SettingsScreen(
     lang: Lang,
     onLangChange: (Lang) -> Unit,
     onResetProfile: () -> Unit,
+    onRegeneratePlan: () -> Unit,
     onOpenProgress: () -> Unit,
     onBack: () -> Unit,
     remindersEnabled: Boolean,
@@ -151,8 +152,12 @@ fun SettingsScreen(
 
             SectionCard(modifier = Modifier.fillMaxWidth()) {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text(t("edit_profile", lang), color = TextPrimary, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
-                    SelectableChip(t("edit_profile", lang), selected = false, onClick = onResetProfile)
+                    Text(t("profile_section", lang), color = TextPrimary, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
+                    Text(t("regenerate_plan_subtitle", lang), color = TextDim, fontSize = 12.sp)
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        SelectableChip(t("regenerate_plan", lang), selected = false, onClick = onRegeneratePlan)
+                        SelectableChip(t("edit_profile", lang), selected = false, onClick = onResetProfile)
+                    }
                 }
             }
 

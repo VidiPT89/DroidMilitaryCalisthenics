@@ -66,6 +66,32 @@ class MainViewModel(private val repository: PlanRepository) : ViewModel() {
         viewModelScope.launch { repository.clearPlan() }
     }
 
+    /** Re-runs the plan engine against the current profile without touching any inputs. */
+    fun regeneratePlan() {
+        val current = _plan.value ?: return
+        val regenerated = PlanEngine.generate(current.profile)
+        _plan.value = regenerated
+        viewModelScope.launch { repository.savePlan(regenerated) }
+    }
+
+    /**
+     * Deletes a logged weight entry. If it was the most recent one, recalibrates the plan to
+     * whatever entry is now most recent, or leaves the profile's weight untouched if the
+     * history becomes empty.
+     */
+    fun deleteWeightEntry(timestampMillis: Long) {
+        viewModelScope.launch {
+            val remaining = repository.removeWeightEntry(timestampMillis)
+            val current = _plan.value ?: return@launch
+            val mostRecent = remaining.maxByOrNull { it.timestampMillis } ?: return@launch
+            if (mostRecent.weightKg == current.profile.weightKg) return@launch
+            val updatedProfile = current.profile.copy(weightKg = mostRecent.weightKg)
+            val recalibrated = PlanEngine.generate(updatedProfile)
+            _plan.value = recalibrated
+            repository.savePlan(recalibrated)
+        }
+    }
+
     fun toggleWorkoutCompleted(weekIndex: Int, dayIndex: Int) {
         val current = _plan.value ?: return
         val updatedWeeks = current.weeks.map { week ->

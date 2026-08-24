@@ -70,6 +70,19 @@ class PlanRepository(private val context: Context) {
         }
     }
 
+    /** Removes one entry by timestamp and returns the remaining history, sorted oldest to newest. */
+    suspend fun removeWeightEntry(timestampMillis: Long): List<WeightEntry> {
+        var remaining: List<WeightEntry> = emptyList()
+        context.dataStore.edit { prefs ->
+            val current = prefs[WEIGHT_HISTORY_KEY]?.let {
+                runCatching { json.decodeFromString<List<WeightEntry>>(it) }.getOrNull()
+            }.orEmpty()
+            remaining = current.filterNot { it.timestampMillis == timestampMillis }.sortedBy { it.timestampMillis }
+            prefs[WEIGHT_HISTORY_KEY] = json.encodeToString(remaining)
+        }
+        return remaining
+    }
+
     val remindersEnabledFlow: Flow<Boolean> = context.dataStore.data.map { it[REMINDERS_ENABLED_KEY] ?: false }
     val reminderHourFlow: Flow<Int> = context.dataStore.data.map { it[REMINDER_HOUR_KEY] ?: 18 }
 

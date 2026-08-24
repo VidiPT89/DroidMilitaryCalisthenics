@@ -94,6 +94,10 @@ class MainActivity : ComponentActivity() {
                                         viewModel.resetProfile()
                                         screen = Screen.ONBOARDING
                                     },
+                                    onRegeneratePlan = {
+                                        viewModel.regeneratePlan()
+                                        screen = Screen.PLAN
+                                    },
                                     onOpenProgress = { screen = Screen.PROGRESS },
                                     onBack = { screen = Screen.PLAN },
                                     remindersEnabled = remindersEnabled,
@@ -106,6 +110,7 @@ class MainActivity : ComponentActivity() {
                                     lang = lang,
                                     weightHistory = weightHistory,
                                     onLogWeight = viewModel::logWeight,
+                                    onDeleteWeightEntry = viewModel::deleteWeightEntry,
                                     onBack = { screen = Screen.SETTINGS }
                                 )
                             }

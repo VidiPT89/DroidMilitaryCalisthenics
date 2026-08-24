@@ -7,11 +7,13 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
@@ -47,6 +49,7 @@ fun ProgressScreen(
     lang: Lang,
     weightHistory: List<WeightEntry>,
     onLogWeight: (Double) -> Unit,
+    onDeleteWeightEntry: (Long) -> Unit,
     onBack: () -> Unit
 ) {
     var weightInput by remember { mutableStateOf("") }
@@ -119,13 +122,19 @@ fun ProgressScreen(
         }
 
         if (weightHistory.isNotEmpty()) {
-            items(weightHistory.sortedByDescending { it.timestampMillis }) { entry ->
+            items(weightHistory.sortedByDescending { it.timestampMillis }, key = { it.timestampMillis }) { entry ->
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(dateFormat.format(Date(entry.timestampMillis)), color = TextDim, fontSize = 13.sp)
-                    Text("${entry.weightKg} kg", color = TextPrimary, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text("${entry.weightKg} kg", color = TextPrimary, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                        IconButton(onClick = { onDeleteWeightEntry(entry.timestampMillis) }, modifier = Modifier.size(32.dp)) {
+                            Icon(Icons.Filled.Delete, contentDescription = t("delete", lang), tint = TextDim, modifier = Modifier.size(18.dp))
+                        }
+                    }
                 }
             }
         }
