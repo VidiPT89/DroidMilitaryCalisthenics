@@ -53,7 +53,21 @@ private val strings: Map<String, Pair<String, String>> = mapOf(
     "start" to ("Começar" to "Get started"),
     "settings" to ("Definições" to "Settings"),
     "language" to ("Idioma" to "Language"),
-    "error_range" to ("Valor fora do intervalo esperado" to "Value out of expected range")
+    "error_range" to ("Valor fora do intervalo esperado" to "Value out of expected range"),
+    "close" to ("Fechar" to "Close"),
+    "cue_push_up" to ("Mantém o corpo alinhado, desce até quase tocar no chão." to "Keep your body straight, lower until you nearly touch the floor."),
+    "cue_squat" to ("Pés à largura dos ombros, desce como se fosses sentar numa cadeira." to "Feet shoulder-width apart, lower like sitting into a chair."),
+    "cue_pull_up" to ("Pega firme na barra, puxa até o queixo passar a barra." to "Grip the bar firmly, pull until your chin clears the bar."),
+    "cue_row" to ("Corpo reto, puxa o peito em direção à barra." to "Keep your body straight, pull your chest toward the bar."),
+    "cue_dip" to ("Cotovelos para trás, desce até cerca de 90 graus." to "Elbows back, lower until your arms reach about 90 degrees."),
+    "cue_lunge" to ("Dá um passo em frente, desce o joelho de trás quase ao chão." to "Step forward, lower your back knee almost to the floor."),
+    "cue_burpee" to ("Agacha, estica para prancha, salta com as mãos acima da cabeça." to "Squat down, kick back to a plank, jump with hands overhead."),
+    "cue_mountain_climber" to ("Em prancha, traz os joelhos ao peito alternadamente e depressa." to "From a plank, drive your knees to your chest quickly, alternating sides."),
+    "cue_plank" to ("Corpo reto da cabeça aos calcanhares, core contraído." to "Keep a straight line from head to heels, core braced."),
+    "cue_leg_raise" to ("Deitado, sobe as pernas esticadas sem levantar as costas." to "Lying down, raise your straight legs without lifting your lower back."),
+    "cue_twist" to ("Sentado, gira o tronco de um lado para o outro." to "Seated, rotate your torso from side to side."),
+    "cue_jumping_jack" to ("Salta abrindo pernas e braços ao mesmo tempo." to "Jump while spreading your arms and legs at the same time."),
+    "cue_stretch" to ("Movimento suave e controlado, sem forçar a articulação." to "Move slowly and with control, never forcing the joint.")
 )
 
 fun t(key: String, lang: Lang): String {
