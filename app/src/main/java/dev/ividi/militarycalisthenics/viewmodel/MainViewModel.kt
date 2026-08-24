@@ -9,6 +9,7 @@ import dev.ividi.militarycalisthenics.model.WeeklyPlan
 import dev.ividi.militarycalisthenics.model.WeightEntry
 import dev.ividi.militarycalisthenics.planengine.PlanEngine
 import dev.ividi.militarycalisthenics.ui.Lang
+import dev.ividi.militarycalisthenics.ui.theme.ThemeMode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,6 +22,9 @@ class MainViewModel(private val repository: PlanRepository) : ViewModel() {
 
     private val _lang = MutableStateFlow(Lang.PT)
     val lang: StateFlow<Lang> = _lang.asStateFlow()
+
+    private val _themeMode = MutableStateFlow(ThemeMode.DARK)
+    val themeMode: StateFlow<ThemeMode> = _themeMode.asStateFlow()
 
     private val _weightHistory = MutableStateFlow<List<WeightEntry>>(emptyList())
     val weightHistory: StateFlow<List<WeightEntry>> = _weightHistory.asStateFlow()
@@ -37,6 +41,9 @@ class MainViewModel(private val repository: PlanRepository) : ViewModel() {
         }
         viewModelScope.launch {
             repository.langFlow.collect { _lang.value = it }
+        }
+        viewModelScope.launch {
+            repository.themeModeFlow.collect { _themeMode.value = it }
         }
         viewModelScope.launch {
             repository.weightHistoryFlow.collect { _weightHistory.value = it }
@@ -111,6 +118,11 @@ class MainViewModel(private val repository: PlanRepository) : ViewModel() {
     fun setLang(lang: Lang) {
         _lang.value = lang
         viewModelScope.launch { repository.setLang(lang) }
+    }
+
+    fun setThemeMode(mode: ThemeMode) {
+        _themeMode.value = mode
+        viewModelScope.launch { repository.setThemeMode(mode) }
     }
 
     /**

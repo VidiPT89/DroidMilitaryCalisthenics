@@ -29,6 +29,8 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import dev.ividi.militarycalisthenics.ui.LocalLang
+import dev.ividi.militarycalisthenics.ui.t
 import dev.ividi.militarycalisthenics.ui.theme.AccentOrange
 import dev.ividi.militarycalisthenics.ui.theme.AccentYellow
 import dev.ividi.militarycalisthenics.ui.theme.BgBase
@@ -38,6 +40,8 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun SplashScreen(onFinished: () -> Unit) {
+    val lang = LocalLang.current
+    val bgColor = BgBase
     val infiniteTransition = rememberInfiniteTransition(label = "splashPulse")
     val pulse by infiniteTransition.animateFloat(
         initialValue = 0.9f,
@@ -95,17 +99,17 @@ fun SplashScreen(onFinished: () -> Unit) {
                         }
                         close()
                     }
-                    drawPath(star, color = BgBase)
+                    drawPath(star, color = bgColor)
 
                     // Push-up figure, side view: head, torso to hip, bent support arm.
-                    drawCircle(BgBase, radius = w * 0.09f, center = Offset(w * 0.28f, h * 0.55f))
-                    drawLine(BgBase, Offset(w * 0.30f, h * 0.55f), Offset(w * 0.66f, h * 0.62f), strokeWidth = stroke.width, cap = stroke.cap)
-                    drawLine(BgBase, Offset(w * 0.66f, h * 0.62f), Offset(w * 0.84f, h * 0.56f), strokeWidth = stroke.width, cap = stroke.cap)
-                    drawLine(BgBase, Offset(w * 0.38f, h * 0.57f), Offset(w * 0.36f, h * 0.72f), strokeWidth = stroke.width, cap = stroke.cap)
+                    drawCircle(bgColor, radius = w * 0.09f, center = Offset(w * 0.28f, h * 0.55f))
+                    drawLine(bgColor, Offset(w * 0.30f, h * 0.55f), Offset(w * 0.66f, h * 0.62f), strokeWidth = stroke.width, cap = stroke.cap)
+                    drawLine(bgColor, Offset(w * 0.66f, h * 0.62f), Offset(w * 0.84f, h * 0.56f), strokeWidth = stroke.width, cap = stroke.cap)
+                    drawLine(bgColor, Offset(w * 0.38f, h * 0.57f), Offset(w * 0.36f, h * 0.72f), strokeWidth = stroke.width, cap = stroke.cap)
                 }
             }
             Text(
-                text = "MILITARY CALISTHENICS",
+                text = t("app_title", lang).uppercase(),
                 color = TextPrimary,
                 fontWeight = FontWeight.Black,
                 fontSize = 20.sp,
@@ -115,7 +119,7 @@ fun SplashScreen(onFinished: () -> Unit) {
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.padding(top = 40.dp)
             ) {
-                Text("Developed by David Arsénio Martins", color = TextDim, fontSize = 13.sp)
+                Text(t("developed_by", lang), color = TextDim, fontSize = 13.sp)
                 Text("ividi.dev", color = AccentOrange, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
             }
         }

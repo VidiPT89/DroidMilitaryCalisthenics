@@ -45,6 +45,7 @@ import dev.ividi.militarycalisthenics.ui.theme.AccentOrange
 import dev.ividi.militarycalisthenics.ui.theme.BgPanel2
 import dev.ividi.militarycalisthenics.ui.theme.TextDim
 import dev.ividi.militarycalisthenics.ui.theme.TextPrimary
+import dev.ividi.militarycalisthenics.ui.theme.ThemeMode
 
 private val REMINDER_HOURS = listOf(6, 8, 12, 18, 20)
 
@@ -52,6 +53,8 @@ private val REMINDER_HOURS = listOf(6, 8, 12, 18, 20)
 fun SettingsScreen(
     lang: Lang,
     onLangChange: (Lang) -> Unit,
+    themeMode: ThemeMode,
+    onThemeModeChange: (ThemeMode) -> Unit,
     onResetProfile: () -> Unit,
     onRegeneratePlan: () -> Unit,
     onOpenProgress: () -> Unit,
@@ -106,6 +109,17 @@ fun SettingsScreen(
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         SelectableChip("PT-PT", lang == Lang.PT) { onLangChange(Lang.PT) }
                         SelectableChip("EN", lang == Lang.EN) { onLangChange(Lang.EN) }
+                    }
+                }
+            }
+
+            SectionCard(modifier = Modifier.fillMaxWidth()) {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text(t("theme", lang), color = TextPrimary, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        SelectableChip(t("theme_dark", lang), themeMode == ThemeMode.DARK) { onThemeModeChange(ThemeMode.DARK) }
+                        SelectableChip(t("theme_light", lang), themeMode == ThemeMode.LIGHT) { onThemeModeChange(ThemeMode.LIGHT) }
+                        SelectableChip(t("theme_system", lang), themeMode == ThemeMode.SYSTEM) { onThemeModeChange(ThemeMode.SYSTEM) }
                     }
                 }
             }

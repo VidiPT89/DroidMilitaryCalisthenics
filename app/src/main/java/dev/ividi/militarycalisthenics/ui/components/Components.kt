@@ -117,6 +117,8 @@ fun ProgressRing(progress: Float, modifier: Modifier = Modifier, sizeDp: Int = 9
         animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
         label = "ringProgress"
     )
+    val trackColor = BgPanel2
+    val gradientColors = listOf(AccentOrange, AccentYellow, AccentOrange)
     Box(
         modifier = modifier.size(sizeDp.dp),
         contentAlignment = Alignment.Center
@@ -124,7 +126,7 @@ fun ProgressRing(progress: Float, modifier: Modifier = Modifier, sizeDp: Int = 9
         Canvas(modifier = Modifier.size(sizeDp.dp)) {
             val strokeWidth = 10.dp.toPx()
             drawArc(
-                color = BgPanel2,
+                color = trackColor,
                 startAngle = -90f,
                 sweepAngle = 360f,
                 useCenter = false,
@@ -133,7 +135,7 @@ fun ProgressRing(progress: Float, modifier: Modifier = Modifier, sizeDp: Int = 9
                 topLeft = androidx.compose.ui.geometry.Offset(strokeWidth / 2, strokeWidth / 2)
             )
             drawArc(
-                brush = Brush.sweepGradient(listOf(AccentOrange, AccentYellow, AccentOrange)),
+                brush = Brush.sweepGradient(gradientColors),
                 startAngle = -90f,
                 sweepAngle = 360f * animatedProgress,
                 useCenter = false,

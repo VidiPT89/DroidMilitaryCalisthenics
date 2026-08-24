@@ -18,6 +18,10 @@ import dev.ividi.militarycalisthenics.ui.theme.TextFaint
 /** A small hand-rolled sparkline of bodyweight over time, no charting library. */
 @Composable
 fun WeightTrendChart(entries: List<WeightEntry>, modifier: Modifier = Modifier) {
+    val baselineColor = TextFaint
+    val lineColors = listOf(AccentOrange, AccentYellow)
+    val dotColor = AccentYellow
+
     Canvas(modifier = modifier.fillMaxWidth().height(120.dp)) {
         if (entries.size < 2) return@Canvas
 
@@ -36,7 +40,7 @@ fun WeightTrendChart(entries: List<WeightEntry>, modifier: Modifier = Modifier) 
 
         // baseline
         drawLine(
-            color = TextFaint.copy(alpha = 0.2f),
+            color = baselineColor.copy(alpha = 0.2f),
             start = Offset(0f, size.height - padding),
             end = Offset(size.width, size.height - padding),
             strokeWidth = 1.dp.toPx()
@@ -44,7 +48,7 @@ fun WeightTrendChart(entries: List<WeightEntry>, modifier: Modifier = Modifier) 
 
         for (i in 0 until points.size - 1) {
             drawLine(
-                brush = Brush.horizontalGradient(listOf(AccentOrange, AccentYellow)),
+                brush = Brush.horizontalGradient(lineColors),
                 start = points[i],
                 end = points[i + 1],
                 strokeWidth = 4.dp.toPx(),
@@ -52,7 +56,7 @@ fun WeightTrendChart(entries: List<WeightEntry>, modifier: Modifier = Modifier) 
             )
         }
         points.forEach { point ->
-            drawCircle(color = AccentYellow, radius = 4.dp.toPx(), center = point)
+            drawCircle(color = dotColor, radius = 4.dp.toPx(), center = point)
         }
     }
 }

@@ -42,8 +42,10 @@ class MainActivity : ComponentActivity() {
         val repository = PlanRepository(applicationContext)
 
         setContent {
-            MilitaryCalisthenicsTheme {
-                val viewModel: MainViewModel = viewModel(factory = MainViewModelFactory(repository))
+            val viewModel: MainViewModel = viewModel(factory = MainViewModelFactory(repository))
+            val themeMode by viewModel.themeMode.collectAsState()
+
+            MilitaryCalisthenicsTheme(themeMode = themeMode) {
                 val plan by viewModel.plan.collectAsState()
                 val lang by viewModel.lang.collectAsState()
                 val weightHistory by viewModel.weightHistory.collectAsState()
@@ -90,6 +92,8 @@ class MainActivity : ComponentActivity() {
                                 SettingsScreen(
                                     lang = lang,
                                     onLangChange = viewModel::setLang,
+                                    themeMode = themeMode,
+                                    onThemeModeChange = viewModel::setThemeMode,
                                     onResetProfile = {
                                         viewModel.resetProfile()
                                         screen = Screen.ONBOARDING

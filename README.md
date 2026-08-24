@@ -16,7 +16,7 @@
 - ✅ Regenerate your plan from your current profile at any time, without redoing onboarding
 - ✅ In-app PT-PT / EN language switch, independent of system locale
 - ✅ Fully offline, plan and progress saved locally
-- ✅ Dark, brand-consistent UI (orange / burnt yellow / near-black)
+- ✅ Dark and light theme, plus follow-system, in the same brand palette (orange / burnt yellow / near-black or warm off-white)
 - ✅ Custom adaptive app icon matching the in-app splash mark
 - ✅ Share any day, or export a full week as a PDF, straight from the plan screen
 - ✅ Optional daily workout reminder notifications, with your choice of time

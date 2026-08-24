@@ -50,17 +50,18 @@ fun ExerciseDemo(category: ExerciseDemoCategory, modifier: Modifier = Modifier) 
         label = "poseT"
     )
     val pose = lerpPose(category.poseA, category.poseB, t)
+    val figureColor = AccentOrange
 
     Canvas(
         modifier = modifier
             .clip(RoundedCornerShape(16.dp))
             .background(BgPanel2)
     ) {
-        drawStickFigure(pose, category.symmetric)
+        drawStickFigure(pose, category.symmetric, figureColor)
     }
 }
 
-private fun DrawScope.drawStickFigure(pose: StickPose, symmetric: Boolean) {
+private fun DrawScope.drawStickFigure(pose: StickPose, symmetric: Boolean, figureColor: androidx.compose.ui.graphics.Color) {
     val w = size.width
     val h = size.height
     val stroke = size.minDimension * 0.045f
@@ -76,12 +77,12 @@ private fun DrawScope.drawStickFigure(pose: StickPose, symmetric: Boolean) {
     val knee = px(pose.knee)
     val foot = px(pose.foot)
 
-    fun line(a: Offset, b: Offset) = drawLine(AccentOrange, a, b, strokeWidth = stroke, cap = StrokeCap.Round)
+    fun line(a: Offset, b: Offset) = drawLine(figureColor, a, b, strokeWidth = stroke, cap = StrokeCap.Round)
 
     line(neck, hip)
     line(neck, elbow); line(elbow, hand)
     line(hip, knee); line(knee, foot)
-    drawCircle(AccentOrange, radius = headRadius, center = head)
+    drawCircle(figureColor, radius = headRadius, center = head)
 
     if (symmetric) {
         val mirroredHand = Offset(2 * neck.x - hand.x, hand.y)

@@ -9,6 +9,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import dev.ividi.militarycalisthenics.model.TrainingPlan
 import dev.ividi.militarycalisthenics.model.WeightEntry
 import dev.ividi.militarycalisthenics.ui.Lang
+import dev.ividi.militarycalisthenics.ui.theme.ThemeMode
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -22,6 +23,7 @@ private val LANG_KEY = stringPreferencesKey("language")
 private val WEIGHT_HISTORY_KEY = stringPreferencesKey("weight_history")
 private val REMINDERS_ENABLED_KEY = booleanPreferencesKey("reminders_enabled")
 private val REMINDER_HOUR_KEY = intPreferencesKey("reminder_hour")
+private val THEME_MODE_KEY = stringPreferencesKey("theme_mode")
 
 private val json = Json { ignoreUnknownKeys = true }
 
@@ -81,6 +83,18 @@ class PlanRepository(private val context: Context) {
             prefs[WEIGHT_HISTORY_KEY] = json.encodeToString(remaining)
         }
         return remaining
+    }
+
+    val themeModeFlow: Flow<ThemeMode> = context.dataStore.data.map { prefs ->
+        when (prefs[THEME_MODE_KEY]) {
+            "LIGHT" -> ThemeMode.LIGHT
+            "SYSTEM" -> ThemeMode.SYSTEM
+            else -> ThemeMode.DARK
+        }
+    }
+
+    suspend fun setThemeMode(mode: ThemeMode) {
+        context.dataStore.edit { it[THEME_MODE_KEY] = mode.name }
     }
 
     val remindersEnabledFlow: Flow<Boolean> = context.dataStore.data.map { it[REMINDERS_ENABLED_KEY] ?: false }
