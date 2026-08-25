@@ -13,7 +13,7 @@ object PlanEngine {
     private const val WEEK_COUNT = 6
 
     fun generate(profile: UserProfile): TrainingPlan {
-        val baseMultiplier = levelMultiplier(profile.level) * ageMultiplier(profile.age) * bmiMultiplier(profile.bmi)
+        val baseMultiplier = levelMultiplier(profile.level) * ageMultiplier(profile.age) * bmiMultiplier(profile.bmi) * sexMultiplier(profile.sex)
         val weeks = (0 until WEEK_COUNT).map { weekIndex ->
             val progression = 1.0 + weekIndex * 0.08
             WeeklyPlan(
@@ -42,6 +42,13 @@ object PlanEngine {
         bmi < 25.0 -> 1.0
         bmi < 30.0 -> 0.9
         else -> 0.75
+    }
+
+    /** Average upper-body strength/endurance calibration by sex, per docs/plan-engine-spec.md. */
+    private fun sexMultiplier(sex: Sex) = when (sex) {
+        Sex.MALE -> 1.0
+        Sex.FEMALE -> 0.9
+        Sex.UNSPECIFIED -> 1.0
     }
 
     private fun buildWeekWorkouts(profile: UserProfile, multiplier: Double, weekIndex: Int): List<DailyWorkout> {

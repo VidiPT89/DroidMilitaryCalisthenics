@@ -10,24 +10,23 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.ividi.militarycalisthenics.model.WeightEntry
@@ -52,18 +51,14 @@ fun ProgressScreen(
     onDeleteWeightEntry: (Long) -> Unit,
     onBack: () -> Unit
 ) {
-    var weightInput by remember { mutableStateOf("") }
+    var weightInput by remember { mutableFloatStateOf(75f) }
     var justLogged by remember { mutableStateOf(false) }
     val dateFormat = remember { SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()) }
 
-    val fieldColors = OutlinedTextFieldDefaults.colors(
-        focusedTextColor = TextPrimary,
-        unfocusedTextColor = TextPrimary,
-        focusedBorderColor = AccentOrange,
-        unfocusedBorderColor = TextDim,
-        cursorColor = AccentOrange,
-        focusedLabelColor = AccentOrange,
-        unfocusedLabelColor = TextDim
+    val sliderColors = SliderDefaults.colors(
+        thumbColor = AccentOrange,
+        activeTrackColor = AccentOrange,
+        inactiveTrackColor = TextDim
     )
 
     LazyColumn(
@@ -85,21 +80,19 @@ fun ProgressScreen(
                 Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                     Text(t("log_weight", lang), color = TextPrimary, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
                     Text(t("log_weight_subtitle", lang), color = TextDim, fontSize = 13.sp)
-                    OutlinedTextField(
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text(t("weight", lang), color = TextDim, fontSize = 14.sp)
+                        Text("${weightInput.toInt()} kg", color = TextPrimary, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
+                    }
+                    Slider(
                         value = weightInput,
-                        onValueChange = { weightInput = it.filter { c -> c.isDigit() || c == '.' }; justLogged = false },
-                        label = { Text(t("weight", lang)) },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        colors = fieldColors,
-                        modifier = Modifier.fillMaxWidth()
+                        onValueChange = { weightInput = it; justLogged = false },
+                        valueRange = 30f..250f,
+                        colors = sliderColors
                     )
                     PrimaryButton(text = t("save", lang), modifier = Modifier.fillMaxWidth()) {
-                        val value = weightInput.toDoubleOrNull()
-                        if (value != null && value in 30.0..250.0) {
-                            onLogWeight(value)
-                            weightInput = ""
-                            justLogged = true
-                        }
+                        onLogWeight(weightInput.toDouble())
+                        justLogged = true
                     }
                     if (justLogged) {
                         Text(t("plan_recalibrated", lang), color = ColorOk, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)

@@ -6,19 +6,20 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.ividi.militarycalisthenics.model.Equipment
@@ -37,24 +38,19 @@ import dev.ividi.militarycalisthenics.ui.theme.TextPrimary
 
 @Composable
 fun OnboardingScreen(lang: Lang, onSubmit: (UserProfile) -> Unit) {
-    var weight by remember { mutableStateOf("75") }
-    var height by remember { mutableStateOf("175") }
-    var age by remember { mutableStateOf("28") }
+    var weight by remember { mutableFloatStateOf(75f) }
+    var height by remember { mutableFloatStateOf(175f) }
+    var age by remember { mutableFloatStateOf(28f) }
     var sex by remember { mutableStateOf(Sex.UNSPECIFIED) }
     var level by remember { mutableStateOf(FitnessLevel.INTERMEDIATE) }
     var goal by remember { mutableStateOf(Goal.MILITARY_ENDURANCE) }
     var days by remember { mutableStateOf(4) }
     var equipment by remember { mutableStateOf(setOf(Equipment.BODYWEIGHT_ONLY)) }
-    var error by remember { mutableStateOf<String?>(null) }
 
-    val fieldColors = OutlinedTextFieldDefaults.colors(
-        focusedTextColor = TextPrimary,
-        unfocusedTextColor = TextPrimary,
-        focusedBorderColor = AccentOrange,
-        unfocusedBorderColor = TextDim,
-        cursorColor = AccentOrange,
-        focusedLabelColor = AccentOrange,
-        unfocusedLabelColor = TextDim
+    val sliderColors = SliderDefaults.colors(
+        thumbColor = AccentOrange,
+        activeTrackColor = AccentOrange,
+        inactiveTrackColor = TextDim
     )
 
     LazyColumn(
@@ -72,20 +68,23 @@ fun OnboardingScreen(lang: Lang, onSubmit: (UserProfile) -> Unit) {
         item {
             SectionCard(modifier = Modifier.fillMaxWidth()) {
                 Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                    OutlinedTextField(
-                        value = weight, onValueChange = { weight = it.filter { c -> c.isDigit() || c == '.' } },
-                        label = { Text(t("weight", lang)) }, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        colors = fieldColors, modifier = Modifier.fillMaxWidth()
+                    SliderField(
+                        label = t("weight", lang), value = weight,
+                        range = UserProfile.WEIGHT_RANGE.start.toFloat()..UserProfile.WEIGHT_RANGE.endInclusive.toFloat(),
+                        valueLabel = "${weight.toInt()} kg", colors = sliderColors,
+                        onValueChange = { weight = it }
                     )
-                    OutlinedTextField(
-                        value = height, onValueChange = { height = it.filter { c -> c.isDigit() || c == '.' } },
-                        label = { Text(t("height", lang)) }, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        colors = fieldColors, modifier = Modifier.fillMaxWidth()
+                    SliderField(
+                        label = t("height", lang), value = height,
+                        range = UserProfile.HEIGHT_RANGE.start.toFloat()..UserProfile.HEIGHT_RANGE.endInclusive.toFloat(),
+                        valueLabel = "${height.toInt()} cm", colors = sliderColors,
+                        onValueChange = { height = it }
                     )
-                    OutlinedTextField(
-                        value = age, onValueChange = { age = it.filter { c -> c.isDigit() } },
-                        label = { Text(t("age", lang)) }, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = KeyboardType.Number),
-                        colors = fieldColors, modifier = Modifier.fillMaxWidth()
+                    SliderField(
+                        label = t("age", lang), value = age,
+                        range = UserProfile.AGE_RANGE.first.toFloat()..UserProfile.AGE_RANGE.last.toFloat(),
+                        valueLabel = "${age.toInt()}", colors = sliderColors,
+                        onValueChange = { age = it }
                     )
                 }
             }
@@ -138,31 +137,35 @@ fun OnboardingScreen(lang: Lang, onSubmit: (UserProfile) -> Unit) {
             }
         }
 
-        error?.let { message ->
-            item { Text(message, color = dev.ividi.militarycalisthenics.ui.theme.ColorError, fontSize = 13.sp) }
-        }
-
         item {
             PrimaryButton(t("generate_plan", lang), modifier = Modifier.fillMaxWidth()) {
-                val w = weight.toDoubleOrNull()
-                val h = height.toDoubleOrNull()
-                val a = age.toIntOrNull()
-                if (w == null || h == null || a == null ||
-                    w !in UserProfile.WEIGHT_RANGE || h !in UserProfile.HEIGHT_RANGE || a !in UserProfile.AGE_RANGE
-                ) {
-                    error = t("error_range", lang)
-                    return@PrimaryButton
-                }
-                error = null
                 onSubmit(
                     UserProfile(
-                        weightKg = w, heightCm = h, age = a, sex = sex, level = level,
+                        weightKg = weight.toDouble(), heightCm = height.toDouble(), age = age.toInt(), sex = sex, level = level,
                         goal = goal, daysPerWeek = days,
                         equipment = if (equipment.isEmpty()) setOf(Equipment.BODYWEIGHT_ONLY) else equipment
                     )
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun SliderField(
+    label: String,
+    value: Float,
+    range: ClosedFloatingPointRange<Float>,
+    valueLabel: String,
+    colors: androidx.compose.material3.SliderColors,
+    onValueChange: (Float) -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Text(label, color = TextDim, fontSize = 14.sp)
+            Text(valueLabel, color = TextPrimary, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
+        }
+        Slider(value = value, onValueChange = onValueChange, valueRange = range, colors = colors)
     }
 }
 
