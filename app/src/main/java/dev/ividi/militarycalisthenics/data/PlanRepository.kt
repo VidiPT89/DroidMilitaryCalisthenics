@@ -24,6 +24,7 @@ private val WEIGHT_HISTORY_KEY = stringPreferencesKey("weight_history")
 private val REMINDERS_ENABLED_KEY = booleanPreferencesKey("reminders_enabled")
 private val REMINDER_HOUR_KEY = intPreferencesKey("reminder_hour")
 private val THEME_MODE_KEY = stringPreferencesKey("theme_mode")
+private val PLAN_COMPLETION_ACKNOWLEDGED_KEY = booleanPreferencesKey("plan_completion_acknowledged")
 
 private val json = Json { ignoreUnknownKeys = true }
 
@@ -105,5 +106,17 @@ class PlanRepository(private val context: Context) {
             prefs[REMINDERS_ENABLED_KEY] = enabled
             prefs[REMINDER_HOUR_KEY] = hour
         }
+    }
+
+    /**
+     * Whether the user has already seen the plan-completion prompt for the
+     * currently stored plan. Persisted (not just in-memory ViewModel state)
+     * so it doesn't reappear on every process restart while the same
+     * completed plan is still active.
+     */
+    val planCompletionAcknowledgedFlow: Flow<Boolean> = context.dataStore.data.map { it[PLAN_COMPLETION_ACKNOWLEDGED_KEY] ?: false }
+
+    suspend fun setPlanCompletionAcknowledged(acknowledged: Boolean) {
+        context.dataStore.edit { it[PLAN_COMPLETION_ACKNOWLEDGED_KEY] = acknowledged }
     }
 }

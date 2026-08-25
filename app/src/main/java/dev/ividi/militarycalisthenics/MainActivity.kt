@@ -79,6 +79,7 @@ class MainActivity : ComponentActivity() {
                             Screen.PLAN -> {
                                 val currentPlan = plan
                                 if (currentPlan != null) {
+                                    val planCompletionAcknowledged by viewModel.planCompletionAcknowledged.collectAsState()
                                     val lastWeek = currentPlan.weeks.maxByOrNull { it.weekIndex }
                                     val isPlanComplete = lastWeek != null &&
                                         lastWeek.workouts.isNotEmpty() &&
@@ -86,11 +87,12 @@ class MainActivity : ComponentActivity() {
                                     PlanScreen(
                                         plan = currentPlan,
                                         lang = lang,
-                                        isPlanComplete = isPlanComplete,
+                                        shouldShowPlanComplete = isPlanComplete && !planCompletionAcknowledged,
                                         nextLevel = currentPlan.profile.level.next,
                                         onToggleCompleted = viewModel::toggleWorkoutCompleted,
                                         onRepeatPlan = viewModel::regeneratePlan,
                                         onLevelUp = viewModel::levelUp,
+                                        onDismissPlanComplete = viewModel::acknowledgePlanComplete,
                                         onOpenSettings = { screen = Screen.SETTINGS }
                                     )
                                 } else {

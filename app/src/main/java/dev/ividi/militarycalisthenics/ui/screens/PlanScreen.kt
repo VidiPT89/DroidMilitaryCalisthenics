@@ -61,19 +61,16 @@ import dev.ividi.militarycalisthenics.util.toShareText
 fun PlanScreen(
     plan: TrainingPlan,
     lang: Lang,
-    isPlanComplete: Boolean,
+    shouldShowPlanComplete: Boolean,
     nextLevel: FitnessLevel?,
     onToggleCompleted: (weekIndex: Int, dayIndex: Int) -> Unit,
     onRepeatPlan: () -> Unit,
     onLevelUp: () -> Unit,
+    onDismissPlanComplete: () -> Unit,
     onOpenSettings: () -> Unit
 ) {
     var selectedWeek by remember { mutableIntStateOf(0) }
     var demoExercise by remember { mutableStateOf<ExerciseSet?>(null) }
-    var showPlanComplete by remember { mutableStateOf(isPlanComplete) }
-    var wasPlanComplete by remember { mutableStateOf(isPlanComplete) }
-    if (isPlanComplete && !wasPlanComplete) showPlanComplete = true
-    wasPlanComplete = isPlanComplete
     val week = plan.weeks.getOrNull(selectedWeek) ?: plan.weeks.first()
     val completedCount = week.workouts.count { it.completed }
     val progress = if (week.workouts.isEmpty()) 0f else completedCount.toFloat() / week.workouts.size
@@ -83,13 +80,16 @@ fun PlanScreen(
         ExerciseDetailDialog(exercise = exercise, lang = lang, onDismiss = { demoExercise = null })
     }
 
-    if (showPlanComplete) {
+    // `shouldShowPlanComplete` is already false once acknowledged (tracked in the
+    // ViewModel/persisted, not local state), so it won't reappear on recomposition —
+    // e.g. switching tabs and back — the way a purely local `remember` flag would.
+    if (shouldShowPlanComplete) {
         PlanCompleteDialog(
             lang = lang,
             nextLevel = nextLevel,
-            onRepeat = { onRepeatPlan(); showPlanComplete = false },
-            onLevelUp = { onLevelUp(); showPlanComplete = false },
-            onDismiss = { showPlanComplete = false }
+            onRepeat = { onRepeatPlan() },
+            onLevelUp = { onLevelUp() },
+            onDismiss = onDismissPlanComplete
         )
     }
 

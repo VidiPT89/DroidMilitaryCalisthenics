@@ -37,6 +37,9 @@ class MainViewModel(private val repository: PlanRepository) : ViewModel() {
     private val _reminderHour = MutableStateFlow(18)
     val reminderHour: StateFlow<Int> = _reminderHour.asStateFlow()
 
+    private val _planCompletionAcknowledged = MutableStateFlow(false)
+    val planCompletionAcknowledged: StateFlow<Boolean> = _planCompletionAcknowledged.asStateFlow()
+
     init {
         viewModelScope.launch {
             _plan.value = repository.currentPlan()
@@ -56,6 +59,9 @@ class MainViewModel(private val repository: PlanRepository) : ViewModel() {
         viewModelScope.launch {
             repository.reminderHourFlow.collect { _reminderHour.value = it }
         }
+        viewModelScope.launch {
+            repository.planCompletionAcknowledgedFlow.collect { _planCompletionAcknowledged.value = it }
+        }
     }
 
     fun setReminders(enabled: Boolean, hour: Int) {
@@ -67,7 +73,11 @@ class MainViewModel(private val repository: PlanRepository) : ViewModel() {
     fun generatePlan(profile: UserProfile) {
         val generated = PlanEngine.generate(profile)
         _plan.value = generated
-        viewModelScope.launch { repository.savePlan(generated) }
+        _planCompletionAcknowledged.value = false
+        viewModelScope.launch {
+            repository.savePlan(generated)
+            repository.setPlanCompletionAcknowledged(false)
+        }
     }
 
     fun resetProfile() {
@@ -80,7 +90,11 @@ class MainViewModel(private val repository: PlanRepository) : ViewModel() {
         val current = _plan.value ?: return
         val regenerated = PlanEngine.generate(current.profile)
         _plan.value = regenerated
-        viewModelScope.launch { repository.savePlan(regenerated) }
+        _planCompletionAcknowledged.value = false
+        viewModelScope.launch {
+            repository.savePlan(regenerated)
+            repository.setPlanCompletionAcknowledged(false)
+        }
     }
 
     /**
@@ -97,7 +111,9 @@ class MainViewModel(private val repository: PlanRepository) : ViewModel() {
             val updatedProfile = current.profile.copy(weightKg = mostRecent.weightKg)
             val recalibrated = PlanEngine.generate(updatedProfile)
             _plan.value = recalibrated
+            _planCompletionAcknowledged.value = false
             repository.savePlan(recalibrated)
+            repository.setPlanCompletionAcknowledged(false)
         }
     }
 
@@ -129,6 +145,21 @@ class MainViewModel(private val repository: PlanRepository) : ViewModel() {
             return lastWeek.workouts.all { it.completed }
         }
 
+    /**
+     * Whether the plan-completion prompt should be shown: the plan is
+     * complete and the user hasn't already dismissed the prompt for it.
+     * Unlike `isPlanComplete`, this stays false across recompositions/app
+     * restarts once acknowledged, so it doesn't nag on every visit.
+     */
+    val shouldShowPlanComplete: Boolean
+        get() = isPlanComplete && !_planCompletionAcknowledged.value
+
+    /** Records that the user has seen the plan-completion prompt for the current plan. */
+    fun acknowledgePlanComplete() {
+        _planCompletionAcknowledged.value = true
+        viewModelScope.launch { repository.setPlanCompletionAcknowledged(true) }
+    }
+
     /** The level `levelUp()` would move to, or null if already at ADVANCED. */
     val nextLevel: FitnessLevel?
         get() = _plan.value?.profile?.level?.next
@@ -140,7 +171,11 @@ class MainViewModel(private val repository: PlanRepository) : ViewModel() {
         val updatedProfile = current.profile.copy(level = next)
         val regenerated = PlanEngine.generate(updatedProfile)
         _plan.value = regenerated
-        viewModelScope.launch { repository.savePlan(regenerated) }
+        _planCompletionAcknowledged.value = false
+        viewModelScope.launch {
+            repository.savePlan(regenerated)
+            repository.setPlanCompletionAcknowledged(false)
+        }
     }
 
     fun setLang(lang: Lang) {
@@ -164,6 +199,10 @@ class MainViewModel(private val repository: PlanRepository) : ViewModel() {
         val updatedProfile = current.profile.copy(weightKg = weightKg)
         val recalibrated = PlanEngine.generate(updatedProfile)
         _plan.value = recalibrated
-        viewModelScope.launch { repository.savePlan(recalibrated) }
+        _planCompletionAcknowledged.value = false
+        viewModelScope.launch {
+            repository.savePlan(recalibrated)
+            repository.setPlanCompletionAcknowledged(false)
+        }
     }
 }
