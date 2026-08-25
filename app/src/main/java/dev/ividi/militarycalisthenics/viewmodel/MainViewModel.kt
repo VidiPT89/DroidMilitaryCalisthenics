@@ -3,10 +3,12 @@ package dev.ividi.militarycalisthenics.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.ividi.militarycalisthenics.data.PlanRepository
+import dev.ividi.militarycalisthenics.model.FitnessLevel
 import dev.ividi.militarycalisthenics.model.TrainingPlan
 import dev.ividi.militarycalisthenics.model.UserProfile
 import dev.ividi.militarycalisthenics.model.WeeklyPlan
 import dev.ividi.militarycalisthenics.model.WeightEntry
+import dev.ividi.militarycalisthenics.model.next
 import dev.ividi.militarycalisthenics.planengine.PlanEngine
 import dev.ividi.militarycalisthenics.ui.Lang
 import dev.ividi.militarycalisthenics.ui.theme.ThemeMode
@@ -113,6 +115,32 @@ class MainViewModel(private val repository: PlanRepository) : ViewModel() {
         val updated = current.copy(weeks = updatedWeeks)
         _plan.value = updated
         viewModelScope.launch { repository.savePlan(updated) }
+    }
+
+    /**
+     * True once every workout in the plan's final week is marked completed —
+     * the trigger for the plan-completion prompt (repeat or level up).
+     * See docs/plan-engine-spec.md "Plan completion".
+     */
+    val isPlanComplete: Boolean
+        get() {
+            val lastWeek = _plan.value?.weeks?.maxByOrNull { it.weekIndex } ?: return false
+            if (lastWeek.workouts.isEmpty()) return false
+            return lastWeek.workouts.all { it.completed }
+        }
+
+    /** The level `levelUp()` would move to, or null if already at ADVANCED. */
+    val nextLevel: FitnessLevel?
+        get() = _plan.value?.profile?.level?.next
+
+    /** Moves the profile to the next FitnessLevel and regenerates the plan for it. No-op at ADVANCED. */
+    fun levelUp() {
+        val current = _plan.value ?: return
+        val next = current.profile.level.next ?: return
+        val updatedProfile = current.profile.copy(level = next)
+        val regenerated = PlanEngine.generate(updatedProfile)
+        _plan.value = regenerated
+        viewModelScope.launch { repository.savePlan(regenerated) }
     }
 
     fun setLang(lang: Lang) {

@@ -22,6 +22,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.ividi.militarycalisthenics.data.PlanRepository
+import dev.ividi.militarycalisthenics.model.next
 import dev.ividi.militarycalisthenics.ui.ProvideLang
 import dev.ividi.militarycalisthenics.ui.screens.OnboardingScreen
 import dev.ividi.militarycalisthenics.ui.screens.PlanScreen
@@ -78,10 +79,18 @@ class MainActivity : ComponentActivity() {
                             Screen.PLAN -> {
                                 val currentPlan = plan
                                 if (currentPlan != null) {
+                                    val lastWeek = currentPlan.weeks.maxByOrNull { it.weekIndex }
+                                    val isPlanComplete = lastWeek != null &&
+                                        lastWeek.workouts.isNotEmpty() &&
+                                        lastWeek.workouts.all { it.completed }
                                     PlanScreen(
                                         plan = currentPlan,
                                         lang = lang,
+                                        isPlanComplete = isPlanComplete,
+                                        nextLevel = currentPlan.profile.level.next,
                                         onToggleCompleted = viewModel::toggleWorkoutCompleted,
+                                        onRepeatPlan = viewModel::regeneratePlan,
+                                        onLevelUp = viewModel::levelUp,
                                         onOpenSettings = { screen = Screen.SETTINGS }
                                     )
                                 } else {

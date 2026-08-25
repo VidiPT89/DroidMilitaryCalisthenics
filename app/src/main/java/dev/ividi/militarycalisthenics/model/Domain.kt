@@ -8,6 +8,14 @@ enum class Sex { MALE, FEMALE, UNSPECIFIED }
 @Serializable
 enum class FitnessLevel { BEGINNER, INTERMEDIATE, ADVANCED }
 
+/** The level reached after finishing this one's full plan, or null once already at ADVANCED. */
+val FitnessLevel.next: FitnessLevel?
+    get() = when (this) {
+        FitnessLevel.BEGINNER -> FitnessLevel.INTERMEDIATE
+        FitnessLevel.INTERMEDIATE -> FitnessLevel.ADVANCED
+        FitnessLevel.ADVANCED -> null
+    }
+
 @Serializable
 enum class Goal { FAT_LOSS, STRENGTH_MASS, MILITARY_ENDURANCE, MOBILITY }
 

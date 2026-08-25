@@ -39,11 +39,13 @@ import androidx.compose.ui.unit.sp
 import dev.ividi.militarycalisthenics.model.BlockType
 import dev.ividi.militarycalisthenics.model.DailyWorkout
 import dev.ividi.militarycalisthenics.model.ExerciseSet
+import dev.ividi.militarycalisthenics.model.FitnessLevel
 import dev.ividi.militarycalisthenics.model.TrainingBlock
 import dev.ividi.militarycalisthenics.model.TrainingPlan
 import dev.ividi.militarycalisthenics.ui.Lang
 import dev.ividi.militarycalisthenics.ui.components.CompletionBadge
 import dev.ividi.militarycalisthenics.ui.components.ExerciseDetailDialog
+import dev.ividi.militarycalisthenics.ui.components.PlanCompleteDialog
 import dev.ividi.militarycalisthenics.ui.components.ProgressRing
 import dev.ividi.militarycalisthenics.ui.components.SectionCard
 import dev.ividi.militarycalisthenics.ui.components.SelectableChip
@@ -59,11 +61,19 @@ import dev.ividi.militarycalisthenics.util.toShareText
 fun PlanScreen(
     plan: TrainingPlan,
     lang: Lang,
+    isPlanComplete: Boolean,
+    nextLevel: FitnessLevel?,
     onToggleCompleted: (weekIndex: Int, dayIndex: Int) -> Unit,
+    onRepeatPlan: () -> Unit,
+    onLevelUp: () -> Unit,
     onOpenSettings: () -> Unit
 ) {
     var selectedWeek by remember { mutableIntStateOf(0) }
     var demoExercise by remember { mutableStateOf<ExerciseSet?>(null) }
+    var showPlanComplete by remember { mutableStateOf(isPlanComplete) }
+    var wasPlanComplete by remember { mutableStateOf(isPlanComplete) }
+    if (isPlanComplete && !wasPlanComplete) showPlanComplete = true
+    wasPlanComplete = isPlanComplete
     val week = plan.weeks.getOrNull(selectedWeek) ?: plan.weeks.first()
     val completedCount = week.workouts.count { it.completed }
     val progress = if (week.workouts.isEmpty()) 0f else completedCount.toFloat() / week.workouts.size
@@ -71,6 +81,16 @@ fun PlanScreen(
 
     demoExercise?.let { exercise ->
         ExerciseDetailDialog(exercise = exercise, lang = lang, onDismiss = { demoExercise = null })
+    }
+
+    if (showPlanComplete) {
+        PlanCompleteDialog(
+            lang = lang,
+            nextLevel = nextLevel,
+            onRepeat = { onRepeatPlan(); showPlanComplete = false },
+            onLevelUp = { onLevelUp(); showPlanComplete = false },
+            onDismiss = { showPlanComplete = false }
+        )
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
