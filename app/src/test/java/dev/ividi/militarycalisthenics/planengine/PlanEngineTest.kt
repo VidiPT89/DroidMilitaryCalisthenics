@@ -261,6 +261,68 @@ class PlanEngineTest {
     }
 
     @Test
+    fun `beginners never get pike push-ups in the strength block`() {
+        // Regression test: iOS gates Pike/Diamond Push-ups to intermediate+
+        // (they demand more shoulder mobility and core control than a
+        // complete beginner should be handed on day one); Android had no
+        // such gating at all.
+        val plan = PlanEngine.generate(baseProfile(level = FitnessLevel.BEGINNER, daysPerWeek = 4))
+        plan.weeks.forEach { week ->
+            week.workouts.forEach { day ->
+                val strengthNames = day.blocks.first { it.type == dev.ividi.militarycalisthenics.model.BlockType.STRENGTH }
+                    .exercises.map { it.name }
+                assertTrue(
+                    "beginner should not get Pike Push-ups: $strengthNames",
+                    "Pike Push-ups" !in strengthNames
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `over forty users never get burpees or jump squats in the circuit`() {
+        // Regression test: iOS excludes high-impact plyometric moves for
+        // over-40 users (skipOverForty); Android's circuit had no
+        // equivalent age-based exclusion at all.
+        val plan = PlanEngine.generate(baseProfile(age = 55, goal = Goal.MILITARY_ENDURANCE, daysPerWeek = 3))
+        plan.weeks.forEach { week ->
+            week.workouts.forEach { day ->
+                val circuitNames = day.blocks.first { it.type == dev.ividi.militarycalisthenics.model.BlockType.CIRCUIT }
+                    .exercises.map { it.name }
+                assertTrue("over-40 should not get Burpees: $circuitNames", "Burpees" !in circuitNames)
+            }
+        }
+    }
+
+    @Test
+    fun `circuit exercise selection varies across weeks of the same plan`() {
+        // Regression test: the circuit block was a fixed list per goal with
+        // no rotation at all — same exercises, same order, every day, every
+        // week, forever.
+        val plan = PlanEngine.generate(baseProfile(goal = Goal.MILITARY_ENDURANCE, daysPerWeek = 3))
+        val week1 = plan.weeks[0].workouts.first().blocks
+            .first { it.type == dev.ividi.militarycalisthenics.model.BlockType.CIRCUIT }.exercises.map { it.name }
+        val week2 = plan.weeks[1].workouts.first().blocks
+            .first { it.type == dev.ividi.militarycalisthenics.model.BlockType.CIRCUIT }.exercises.map { it.name }
+        assertNotEquals(
+            "circuit selection should vary week to week, not repeat identically",
+            week1,
+            week2
+        )
+    }
+
+    @Test
+    fun `mobility goal replaces ab core work with mobility drills`() {
+        // Regression test: the core block used to always train abs (Plank,
+        // Leg Raises, ...) even on the Mobility goal, unlike iOS which
+        // substitutes mobility-focused drills for that goal instead.
+        val plan = PlanEngine.generate(baseProfile(goal = Goal.MOBILITY, daysPerWeek = 3))
+        val coreNames = plan.weeks.first().workouts.first().blocks
+            .first { it.type == dev.ividi.militarycalisthenics.model.BlockType.CORE }.exercises.map { it.name }
+        assertTrue("Plank should not appear on the Mobility goal: $coreNames", "Plank" !in coreNames)
+    }
+
+    @Test
     fun `shorter session minutes never increases the strength exercise count`() {
         val short = PlanEngine.generate(baseProfile(sessionMinutes = 15))
         val long = PlanEngine.generate(baseProfile(sessionMinutes = 60))

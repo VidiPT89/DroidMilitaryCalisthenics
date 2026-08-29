@@ -60,8 +60,8 @@ object PlanEngine {
                 blocks = listOf(
                     warmUpBlock(),
                     strengthBlock(profile, multiplier, dayIndex, weekIndex, budget.strengthSeconds),
-                    circuitBlock(profile, multiplier, weekIndex, budget.circuitSeconds),
-                    coreBlock(multiplier, dayIndex, weekIndex, budget.coreSeconds),
+                    circuitBlock(profile, multiplier, dayIndex, weekIndex, budget.circuitSeconds),
+                    coreBlock(profile.goal, multiplier, dayIndex, weekIndex, budget.coreSeconds),
                     coolDownBlock()
                 )
             )
@@ -138,7 +138,14 @@ object PlanEngine {
     )
 
     /** A strength-pool candidate, before scaling — carries the pattern used for day filtering. */
-    private data class StrengthCandidate(val name: String, val pattern: MovementPattern, val baseReps: Int)
+    private data class StrengthCandidate(
+        val name: String,
+        val pattern: MovementPattern,
+        val baseReps: Int,
+        val minLevel: FitnessLevel = FitnessLevel.BEGINNER
+    )
+
+    private fun levelAllows(required: FitnessLevel, userLevel: FitnessLevel) = userLevel.ordinal >= required.ordinal
 
     private fun strengthPool(profile: UserProfile): List<StrengthCandidate> {
         val hasBar = Equipment.PULL_UP_BAR in profile.equipment
@@ -147,7 +154,7 @@ object PlanEngine {
         val push = mutableListOf(
             StrengthCandidate("Push-ups", MovementPattern.PUSH, 12),
             StrengthCandidate("Wide Push-ups", MovementPattern.PUSH, 10),
-            StrengthCandidate("Pike Push-ups", MovementPattern.PUSH, 8)
+            StrengthCandidate("Pike Push-ups", MovementPattern.PUSH, 8, minLevel = FitnessLevel.INTERMEDIATE)
         )
         push += if (hasParallettes) {
             StrengthCandidate("Parallel Bar Dips", MovementPattern.PUSH, 8)
@@ -157,7 +164,7 @@ object PlanEngine {
 
         val pull = if (hasBar) {
             listOf(
-                StrengthCandidate("Pull-ups", MovementPattern.PULL, 6),
+                StrengthCandidate("Pull-ups", MovementPattern.PULL, 6, minLevel = FitnessLevel.INTERMEDIATE),
                 StrengthCandidate("Chin-ups", MovementPattern.PULL, 6)
             )
         } else {
@@ -179,8 +186,9 @@ object PlanEngine {
 
         val allowedPatterns = dayPatternFocus(profile.goal, dayIndex)
         val fullPool = strengthPool(profile)
-        val filtered = fullPool.filter { it.pattern in allowedPatterns }.ifEmpty { fullPool }
-        val rotated = rotate(filtered, dayIndex + weekIndex)
+        val patternFiltered = fullPool.filter { it.pattern in allowedPatterns }.ifEmpty { fullPool }
+        val levelFiltered = patternFiltered.filter { levelAllows(it.minLevel, profile.level) }.ifEmpty { patternFiltered }
+        val rotated = rotate(levelFiltered, dayIndex + weekIndex)
 
         val exercises = rotated.map { candidate ->
             ExerciseSet(candidate.name, reps = scale(candidate.baseReps, multiplier), sets = sets, restSeconds = restSeconds)
@@ -196,40 +204,72 @@ object PlanEngine {
         return list.subList(shift, list.size) + list.subList(0, shift)
     }
 
-    private fun circuitBlock(profile: UserProfile, multiplier: Double, weekIndex: Int, budgetSeconds: Int): TrainingBlock {
+    /** A circuit-pool candidate, before scaling. */
+    private data class CircuitCandidate(
+        val name: String,
+        val baseReps: Int? = null,
+        val baseSeconds: Int? = null,
+        val minLevel: FitnessLevel = FitnessLevel.BEGINNER,
+        val skipOverForty: Boolean = false
+    )
+
+    private fun circuitPool(goal: Goal): List<CircuitCandidate> = when (goal) {
+        Goal.MILITARY_ENDURANCE -> listOf(
+            CircuitCandidate("Burpees", baseReps = 10, skipOverForty = true),
+            CircuitCandidate("Mountain Climbers", baseSeconds = 40),
+            CircuitCandidate("Sprint Intervals", baseSeconds = 30),
+            CircuitCandidate("High Knees", baseSeconds = 30),
+            CircuitCandidate("Shuttle Runs", baseSeconds = 30),
+            CircuitCandidate("Bear Crawl", baseSeconds = 30)
+        )
+        Goal.FAT_LOSS -> listOf(
+            CircuitCandidate("Burpees", baseReps = 8, skipOverForty = true),
+            CircuitCandidate("Jump Squats", baseReps = 12, skipOverForty = true),
+            CircuitCandidate("Mountain Climbers", baseSeconds = 40),
+            CircuitCandidate("High Knees", baseSeconds = 30),
+            CircuitCandidate("Bear Crawl", baseSeconds = 30)
+        )
+        Goal.STRENGTH_MASS -> listOf(
+            CircuitCandidate("Mountain Climbers", baseSeconds = 30),
+            CircuitCandidate("Pike Push-ups", baseReps = 8, minLevel = FitnessLevel.INTERMEDIATE),
+            CircuitCandidate("Explosive Push-ups", baseReps = 6, minLevel = FitnessLevel.INTERMEDIATE),
+            CircuitCandidate("Diamond Push-ups", baseReps = 8, minLevel = FitnessLevel.INTERMEDIATE)
+        )
+        Goal.MOBILITY -> listOf(
+            CircuitCandidate("World's Greatest Stretch", baseReps = 6),
+            CircuitCandidate("Cat-Cow", baseReps = 10),
+            CircuitCandidate("Bodyweight Good Mornings", baseReps = 10)
+        )
+    }
+
+    private fun circuitBlock(profile: UserProfile, multiplier: Double, dayIndex: Int, weekIndex: Int, budgetSeconds: Int): TrainingBlock {
         val rounds = scaleSets(3, multiplier)
         val restSeconds = if (profile.goal == Goal.FAT_LOSS) 30 else 40
-        val exercises = when (profile.goal) {
-            Goal.MILITARY_ENDURANCE -> listOf(
-                ExerciseSet("Burpees", reps = scale(10, multiplier), sets = rounds, restSeconds = restSeconds),
-                ExerciseSet("Mountain Climbers", seconds = 40, sets = rounds, restSeconds = restSeconds),
-                ExerciseSet("Sprint Intervals", seconds = 30, sets = rounds, restSeconds = restSeconds),
-                ExerciseSet("High Knees", seconds = 30, sets = rounds, restSeconds = restSeconds)
-            )
-            Goal.FAT_LOSS -> listOf(
-                ExerciseSet("Burpees", reps = scale(8, multiplier), sets = rounds, restSeconds = restSeconds),
-                ExerciseSet("Jump Squats", reps = scale(12, multiplier), sets = rounds, restSeconds = restSeconds),
-                ExerciseSet("Mountain Climbers", seconds = 40, sets = rounds, restSeconds = restSeconds)
-            )
-            Goal.STRENGTH_MASS -> listOf(
-                ExerciseSet("Pike Push-ups", reps = scale(8, multiplier), sets = rounds, restSeconds = restSeconds),
-                ExerciseSet("Explosive Push-ups", reps = scale(6, multiplier), sets = rounds, restSeconds = restSeconds)
-            )
-            Goal.MOBILITY -> listOf(
-                ExerciseSet("World's Greatest Stretch", reps = 6, sets = rounds, restSeconds = restSeconds),
-                ExerciseSet("Cat-Cow", reps = 10, sets = rounds, restSeconds = restSeconds),
-                ExerciseSet("Bodyweight Good Mornings", reps = 10, sets = rounds, restSeconds = restSeconds)
+        val isOverForty = profile.age > 40
+
+        val fullPool = circuitPool(profile.goal)
+        val ageFiltered = fullPool.filter { !(it.skipOverForty && isOverForty) }.ifEmpty { fullPool }
+        val levelFiltered = ageFiltered.filter { levelAllows(it.minLevel, profile.level) }.ifEmpty { ageFiltered }
+        val rotated = rotate(levelFiltered, dayIndex + weekIndex)
+
+        val exercises = rotated.map { candidate ->
+            ExerciseSet(
+                candidate.name,
+                reps = candidate.baseReps?.let { scale(it, multiplier) },
+                seconds = candidate.baseSeconds,
+                sets = rounds,
+                restSeconds = restSeconds
             )
         }
         return TrainingBlock(type = BlockType.CIRCUIT, exercises = trimToBudget(exercises, budgetSeconds))
     }
 
-    private fun coreBlock(multiplier: Double, dayIndex: Int, weekIndex: Int, budgetSeconds: Int): TrainingBlock {
+    private fun coreBlock(goal: Goal, multiplier: Double, dayIndex: Int, weekIndex: Int, budgetSeconds: Int): TrainingBlock {
         // A pool of just Plank/Leg Raises/Russian Twists, always in this
         // fixed order, used to mean Plank appeared in nearly every workout
         // (it always survived the budget trim since it came first). A wider
         // pool plus rotation spreads exercises out instead.
-        val pool = listOf(
+        val abPool = listOf(
             ExerciseSet("Plank", seconds = scale(45, multiplier), sets = 3, restSeconds = 20),
             ExerciseSet("Side Plank", seconds = scale(30, multiplier), sets = 3, restSeconds = 20),
             ExerciseSet("Mountain Climbers (core)", seconds = scale(35, multiplier), sets = 3, restSeconds = 20),
@@ -238,6 +278,18 @@ object PlanEngine {
             ExerciseSet("Bicycle Crunches", reps = scale(20, multiplier), sets = 3, restSeconds = 20),
             ExerciseSet("Superman Hold", seconds = scale(20, multiplier), sets = 3, restSeconds = 20)
         )
+        // On the Mobility goal, swap ab-focused core work for mobility
+        // drills — matches iOS, which substitutes its core block the same
+        // way for that goal instead of always training abs.
+        val mobilityPool = listOf(
+            ExerciseSet("Hip Openers", seconds = scale(30, multiplier), sets = 3, restSeconds = 20),
+            ExerciseSet("Cat-Cow", reps = scale(10, multiplier), sets = 3, restSeconds = 20),
+            ExerciseSet("Shoulder Circles", seconds = scale(30, multiplier), sets = 3, restSeconds = 20),
+            ExerciseSet("Thoracic Rotations", seconds = scale(30, multiplier), sets = 3, restSeconds = 20),
+            ExerciseSet("Ankle Circles", seconds = scale(20, multiplier), sets = 3, restSeconds = 20),
+            ExerciseSet("Deep Squat Hold", seconds = scale(30, multiplier), sets = 3, restSeconds = 20)
+        )
+        val pool = if (goal == Goal.MOBILITY) mobilityPool else abPool
         val rotated = rotate(pool, dayIndex + weekIndex)
         return TrainingBlock(type = BlockType.CORE, exercises = trimToBudget(rotated, budgetSeconds))
     }
