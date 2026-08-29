@@ -172,8 +172,12 @@ private val strings: Map<String, Pair<String, String>> = mapOf(
     "Cat-Cow" to ("Gato-Vaca" to "Cat-Cow"),
     "Bodyweight Good Mornings" to ("Good Mornings com Peso do Corpo" to "Bodyweight Good Mornings"),
     "Plank" to ("Prancha" to "Plank"),
+    "Side Plank" to ("Prancha Lateral" to "Side Plank"),
+    "Mountain Climbers (core)" to ("Escaladores (core)" to "Mountain Climbers (core)"),
     "Leg Raises" to ("Elevação de Pernas" to "Leg Raises"),
     "Russian Twists" to ("Rotação Russa" to "Russian Twists"),
+    "Bicycle Crunches" to ("Abdominais Bicicleta" to "Bicycle Crunches"),
+    "Superman Hold" to ("Superman" to "Superman Hold"),
     "Deep Breathing" to ("Respiração Profunda" to "Deep Breathing"),
     "Hamstring Stretch" to ("Alongamento de Isquiotibiais" to "Hamstring Stretch"),
     "Shoulder Stretch" to ("Alongamento de Ombros" to "Shoulder Stretch")

@@ -61,7 +61,7 @@ object PlanEngine {
                     warmUpBlock(),
                     strengthBlock(profile, multiplier, dayIndex, weekIndex, budget.strengthSeconds),
                     circuitBlock(profile, multiplier, weekIndex, budget.circuitSeconds),
-                    coreBlock(multiplier, budget.coreSeconds),
+                    coreBlock(multiplier, dayIndex, weekIndex, budget.coreSeconds),
                     coolDownBlock()
                 )
             )
@@ -224,13 +224,22 @@ object PlanEngine {
         return TrainingBlock(type = BlockType.CIRCUIT, exercises = trimToBudget(exercises, budgetSeconds))
     }
 
-    private fun coreBlock(multiplier: Double, budgetSeconds: Int): TrainingBlock {
-        val exercises = listOf(
+    private fun coreBlock(multiplier: Double, dayIndex: Int, weekIndex: Int, budgetSeconds: Int): TrainingBlock {
+        // A pool of just Plank/Leg Raises/Russian Twists, always in this
+        // fixed order, used to mean Plank appeared in nearly every workout
+        // (it always survived the budget trim since it came first). A wider
+        // pool plus rotation spreads exercises out instead.
+        val pool = listOf(
             ExerciseSet("Plank", seconds = scale(45, multiplier), sets = 3, restSeconds = 20),
+            ExerciseSet("Side Plank", seconds = scale(30, multiplier), sets = 3, restSeconds = 20),
+            ExerciseSet("Mountain Climbers (core)", seconds = scale(35, multiplier), sets = 3, restSeconds = 20),
+            ExerciseSet("Russian Twists", reps = scale(20, multiplier), sets = 3, restSeconds = 20),
             ExerciseSet("Leg Raises", reps = scale(12, multiplier), sets = 3, restSeconds = 20),
-            ExerciseSet("Russian Twists", reps = scale(20, multiplier), sets = 3, restSeconds = 20)
+            ExerciseSet("Bicycle Crunches", reps = scale(20, multiplier), sets = 3, restSeconds = 20),
+            ExerciseSet("Superman Hold", seconds = scale(20, multiplier), sets = 3, restSeconds = 20)
         )
-        return TrainingBlock(type = BlockType.CORE, exercises = trimToBudget(exercises, budgetSeconds))
+        val rotated = rotate(pool, dayIndex + weekIndex)
+        return TrainingBlock(type = BlockType.CORE, exercises = trimToBudget(rotated, budgetSeconds))
     }
 
     private fun coolDownBlock() = TrainingBlock(

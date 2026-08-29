@@ -238,6 +238,29 @@ class PlanEngineTest {
     }
 
     @Test
+    fun `core pool is big enough that plank is not on every day`() {
+        // Regression test: the core block used to be a fixed 3-exercise list
+        // (Plank, Leg Raises, Russian Twists) in the same order every day,
+        // and Plank always survived the budget trim since it came first —
+        // so it appeared on literally every single day of every week.
+        val plan = PlanEngine.generate(baseProfile(goal = Goal.FAT_LOSS, daysPerWeek = 6))
+        var totalDays = 0
+        var plankDays = 0
+        plan.weeks.forEach { week ->
+            week.workouts.forEach { day ->
+                totalDays++
+                val coreNames = day.blocks.first { it.type == dev.ividi.militarycalisthenics.model.BlockType.CORE }
+                    .exercises.map { it.name }
+                if ("Plank" in coreNames) plankDays++
+            }
+        }
+        assertTrue(
+            "plank should not appear on every day ($plankDays/$totalDays)",
+            plankDays < totalDays
+        )
+    }
+
+    @Test
     fun `shorter session minutes never increases the strength exercise count`() {
         val short = PlanEngine.generate(baseProfile(sessionMinutes = 15))
         val long = PlanEngine.generate(baseProfile(sessionMinutes = 60))
