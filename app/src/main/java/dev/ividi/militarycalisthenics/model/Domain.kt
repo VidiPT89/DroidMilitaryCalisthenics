@@ -52,6 +52,13 @@ data class UserProfile(
 @Serializable
 enum class BlockType { WARM_UP, STRENGTH, CIRCUIT, CORE, COOL_DOWN }
 
+/**
+ * Movement pattern a strength exercise trains — used to make exercise
+ * selection respect the day's own focus (e.g. a "Push Strength" day
+ * shouldn't be filled with squats).
+ */
+enum class MovementPattern { PUSH, PULL, LEGS }
+
 @Serializable
 data class ExerciseSet(
     val name: String,

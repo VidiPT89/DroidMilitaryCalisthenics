@@ -59,7 +59,7 @@ object PlanEngine {
                 title = dayTitle(profile.goal, dayIndex),
                 blocks = listOf(
                     warmUpBlock(),
-                    strengthBlock(profile, multiplier, dayIndex, budget.strengthSeconds),
+                    strengthBlock(profile, multiplier, dayIndex, weekIndex, budget.strengthSeconds),
                     circuitBlock(profile, multiplier, weekIndex, budget.circuitSeconds),
                     coreBlock(multiplier, budget.coreSeconds),
                     coolDownBlock()
@@ -107,6 +107,26 @@ object PlanEngine {
         return focuses[dayIndex % focuses.size]
     }
 
+    /**
+     * Which movement patterns a day's strength block should draw from. Only
+     * STRENGTH_MASS's day titles (see [dayTitle]) actually promise a specific
+     * focus ("Push Strength", "Legs & Core", ...) — this is what makes that
+     * promise real instead of the title being purely cosmetic. Other goals'
+     * titles are generic conditioning themes, so their strength block stays
+     * balanced across all patterns.
+     */
+    private fun dayPatternFocus(goal: Goal, dayIndex: Int): Set<MovementPattern> {
+        if (goal != Goal.STRENGTH_MASS) return setOf(MovementPattern.PUSH, MovementPattern.PULL, MovementPattern.LEGS)
+        return when (dayIndex % 6) {
+            0 -> setOf(MovementPattern.PUSH) // Push Strength
+            1 -> setOf(MovementPattern.PULL) // Pull Strength
+            2 -> setOf(MovementPattern.LEGS) // Legs & Core
+            3 -> setOf(MovementPattern.PUSH, MovementPattern.PULL) // Upper Power
+            4 -> setOf(MovementPattern.PUSH, MovementPattern.PULL, MovementPattern.LEGS) // Full Body Strength
+            else -> setOf(MovementPattern.PULL) // Grip & Core
+        }
+    }
+
     private fun warmUpBlock() = TrainingBlock(
         type = BlockType.WARM_UP,
         exercises = listOf(
@@ -117,31 +137,63 @@ object PlanEngine {
         )
     )
 
-    private fun strengthBlock(profile: UserProfile, multiplier: Double, dayIndex: Int, budgetSeconds: Int): TrainingBlock {
+    /** A strength-pool candidate, before scaling — carries the pattern used for day filtering. */
+    private data class StrengthCandidate(val name: String, val pattern: MovementPattern, val baseReps: Int)
+
+    private fun strengthPool(profile: UserProfile): List<StrengthCandidate> {
         val hasBar = Equipment.PULL_UP_BAR in profile.equipment
         val hasParallettes = Equipment.PARALLETTES in profile.equipment
-        val pushReps = scale(12, multiplier)
-        val squatReps = scale(18, multiplier)
+
+        val push = mutableListOf(
+            StrengthCandidate("Push-ups", MovementPattern.PUSH, 12),
+            StrengthCandidate("Wide Push-ups", MovementPattern.PUSH, 10),
+            StrengthCandidate("Pike Push-ups", MovementPattern.PUSH, 8)
+        )
+        push += if (hasParallettes) {
+            StrengthCandidate("Parallel Bar Dips", MovementPattern.PUSH, 8)
+        } else {
+            StrengthCandidate("Bench Dips", MovementPattern.PUSH, 10)
+        }
+
+        val pull = if (hasBar) {
+            listOf(
+                StrengthCandidate("Pull-ups", MovementPattern.PULL, 6),
+                StrengthCandidate("Chin-ups", MovementPattern.PULL, 6)
+            )
+        } else {
+            listOf(StrengthCandidate("Inverted Rows / Table Rows", MovementPattern.PULL, 10))
+        }
+
+        val legs = listOf(
+            StrengthCandidate("Bodyweight Squats", MovementPattern.LEGS, 18),
+            StrengthCandidate("Lunges", MovementPattern.LEGS, 12),
+            StrengthCandidate("Glute Bridges", MovementPattern.LEGS, 15)
+        )
+
+        return push + pull + legs
+    }
+
+    private fun strengthBlock(profile: UserProfile, multiplier: Double, dayIndex: Int, weekIndex: Int, budgetSeconds: Int): TrainingBlock {
         val sets = scaleSets(3, multiplier)
         val restSeconds = if (profile.goal == Goal.STRENGTH_MASS) 75 else 45
 
-        val exercises = mutableListOf(
-            ExerciseSet("Push-ups", reps = pushReps, sets = sets, restSeconds = restSeconds),
-            ExerciseSet("Bodyweight Squats", reps = squatReps, sets = sets, restSeconds = restSeconds)
-        )
-        if (hasBar) {
-            exercises += ExerciseSet("Pull-ups", reps = scale(6, multiplier), sets = sets, restSeconds = restSeconds)
-        } else {
-            exercises += ExerciseSet("Inverted Rows / Table Rows", reps = scale(10, multiplier), sets = sets, restSeconds = restSeconds)
+        val allowedPatterns = dayPatternFocus(profile.goal, dayIndex)
+        val fullPool = strengthPool(profile)
+        val filtered = fullPool.filter { it.pattern in allowedPatterns }.ifEmpty { fullPool }
+        val rotated = rotate(filtered, dayIndex + weekIndex)
+
+        val exercises = rotated.map { candidate ->
+            ExerciseSet(candidate.name, reps = scale(candidate.baseReps, multiplier), sets = sets, restSeconds = restSeconds)
         }
-        if (hasParallettes) {
-            exercises += ExerciseSet("Parallel Bar Dips", reps = scale(8, multiplier), sets = sets, restSeconds = restSeconds)
-        } else {
-            exercises += ExerciseSet("Bench Dips", reps = scale(10, multiplier), sets = sets, restSeconds = restSeconds)
-        }
-        exercises += ExerciseSet("Lunges", reps = scale(12, multiplier), sets = sets, restSeconds = restSeconds)
 
         return TrainingBlock(type = BlockType.STRENGTH, exercises = trimToBudget(exercises, budgetSeconds))
+    }
+
+    /** Rotates a list by `offset` positions, wrapping around — used so the same day/week doesn't always start on the same exercise. */
+    private fun <T> rotate(list: List<T>, offset: Int): List<T> {
+        if (list.isEmpty()) return list
+        val shift = ((offset % list.size) + list.size) % list.size
+        return list.subList(shift, list.size) + list.subList(0, shift)
     }
 
     private fun circuitBlock(profile: UserProfile, multiplier: Double, weekIndex: Int, budgetSeconds: Int): TrainingBlock {

@@ -171,6 +171,73 @@ class PlanEngineTest {
     }
 
     @Test
+    fun `push strength day never includes leg exercises`() {
+        // Regression test: STRENGTH_MASS day titles promise a specific focus
+        // ("Push Strength", "Legs & Core", ...) but the strength block used
+        // to ignore that and always include the same fixed exercise list.
+        val plan = PlanEngine.generate(baseProfile(goal = Goal.STRENGTH_MASS, daysPerWeek = 6))
+        val legNames = setOf("Bodyweight Squats", "Lunges", "Glute Bridges")
+
+        plan.weeks.forEach { week ->
+            val pushDay = week.workouts.first { it.title == "Push Strength" }
+            val strengthNames = pushDay.blocks.first { it.type == dev.ividi.militarycalisthenics.model.BlockType.STRENGTH }
+                .exercises.map { it.name }
+            assertTrue("push day must have exercises", strengthNames.isNotEmpty())
+            strengthNames.forEach { name ->
+                assertTrue("$name is a leg exercise but appeared on Push Strength day", name !in legNames)
+            }
+        }
+    }
+
+    @Test
+    fun `legs and core day only includes leg exercises`() {
+        val plan = PlanEngine.generate(baseProfile(goal = Goal.STRENGTH_MASS, daysPerWeek = 6))
+        val legNames = setOf("Bodyweight Squats", "Lunges", "Glute Bridges")
+
+        plan.weeks.forEach { week ->
+            val legsDay = week.workouts.first { it.title == "Legs & Core" }
+            val strengthNames = legsDay.blocks.first { it.type == dev.ividi.militarycalisthenics.model.BlockType.STRENGTH }
+                .exercises.map { it.name }
+            assertTrue("legs day must have exercises", strengthNames.isNotEmpty())
+            strengthNames.forEach { name ->
+                assertTrue("$name is not a leg exercise but appeared on Legs & Core day", name in legNames)
+            }
+        }
+    }
+
+    @Test
+    fun `bodyweight only equipment still has a pull exercise available`() {
+        // Regression test: verifies the fallback pull exercise (Inverted
+        // Rows) is offered when there's no pull-up bar.
+        val plan = PlanEngine.generate(
+            baseProfile(goal = Goal.STRENGTH_MASS, daysPerWeek = 6, equipment = setOf(Equipment.BODYWEIGHT_ONLY))
+        )
+        val pullDay = plan.weeks.first().workouts.first { it.title == "Pull Strength" }
+        val strengthNames = pullDay.blocks.first { it.type == dev.ividi.militarycalisthenics.model.BlockType.STRENGTH }
+            .exercises.map { it.name }
+        assertTrue(
+            "expected the bodyweight pull fallback exercise, got $strengthNames",
+            strengthNames.contains("Inverted Rows / Table Rows")
+        )
+    }
+
+    @Test
+    fun `strength selection varies across weeks of the same plan`() {
+        // Regression test: strength exercises used to be an identical fixed
+        // list every day and every week, regardless of goal or day title.
+        val plan = PlanEngine.generate(baseProfile(goal = Goal.MILITARY_ENDURANCE, daysPerWeek = 4))
+        val week1Names = plan.weeks[0].workouts.first().blocks
+            .first { it.type == dev.ividi.militarycalisthenics.model.BlockType.STRENGTH }.exercises.map { it.name }
+        val week2Names = plan.weeks[1].workouts.first().blocks
+            .first { it.type == dev.ividi.militarycalisthenics.model.BlockType.STRENGTH }.exercises.map { it.name }
+        assertNotEquals(
+            "strength selection should vary week to week, not repeat identically",
+            week1Names,
+            week2Names
+        )
+    }
+
+    @Test
     fun `shorter session minutes never increases the strength exercise count`() {
         val short = PlanEngine.generate(baseProfile(sessionMinutes = 15))
         val long = PlanEngine.generate(baseProfile(sessionMinutes = 60))
