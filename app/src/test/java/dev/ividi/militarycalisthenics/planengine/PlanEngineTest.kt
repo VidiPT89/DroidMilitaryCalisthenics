@@ -19,7 +19,12 @@ class PlanEngineTest {
         level: FitnessLevel = FitnessLevel.INTERMEDIATE,
         goal: Goal = Goal.MILITARY_ENDURANCE,
         daysPerWeek: Int = 4,
-        equipment: Set<Equipment> = setOf(Equipment.BODYWEIGHT_ONLY)
+        equipment: Set<Equipment> = setOf(Equipment.BODYWEIGHT_ONLY),
+        // 60 (the top of the allowed range) keeps these calibration tests
+        // clear of session-duration trimming, which can otherwise lower a
+        // harder profile's total exercise count enough to mask its higher
+        // per-exercise intensity, see testSessionMinutesTrimsExerciseCount.
+        sessionMinutes: Int = 60
     ) = UserProfile(
         weightKg = weightKg,
         heightCm = heightCm,
@@ -28,7 +33,8 @@ class PlanEngineTest {
         level = level,
         goal = goal,
         daysPerWeek = daysPerWeek,
-        equipment = equipment
+        equipment = equipment,
+        sessionMinutes = sessionMinutes
     )
 
     /** Sum of (reps or seconds) * sets across every exercise in every block/day/week. */
@@ -161,6 +167,22 @@ class PlanEngineTest {
             "recalibrating after a large weight change must change calibrated volume",
             beforeVolume,
             afterVolume
+        )
+    }
+
+    @Test
+    fun `shorter session minutes never increases the strength exercise count`() {
+        val short = PlanEngine.generate(baseProfile(sessionMinutes = 15))
+        val long = PlanEngine.generate(baseProfile(sessionMinutes = 60))
+
+        val shortCount = short.weeks.first().workouts.first().blocks
+            .first { it.type == dev.ividi.militarycalisthenics.model.BlockType.STRENGTH }.exercises.size
+        val longCount = long.weeks.first().workouts.first().blocks
+            .first { it.type == dev.ividi.militarycalisthenics.model.BlockType.STRENGTH }.exercises.size
+
+        assertTrue(
+            "a 60-minute session ($longCount exercises) should fit at least as many strength exercises as a 15-minute one ($shortCount)",
+            longCount >= shortCount
         )
     }
 }

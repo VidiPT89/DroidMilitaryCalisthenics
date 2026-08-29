@@ -46,6 +46,7 @@ fun OnboardingScreen(lang: Lang, onSubmit: (UserProfile) -> Unit) {
     var goal by remember { mutableStateOf(Goal.MILITARY_ENDURANCE) }
     var days by remember { mutableStateOf(4) }
     var equipment by remember { mutableStateOf(setOf(Equipment.BODYWEIGHT_ONLY)) }
+    var sessionMinutes by remember { mutableFloatStateOf(30f) }
 
     val sliderColors = SliderDefaults.colors(
         thumbColor = AccentOrange,
@@ -138,12 +139,24 @@ fun OnboardingScreen(lang: Lang, onSubmit: (UserProfile) -> Unit) {
         }
 
         item {
+            SectionCard(modifier = Modifier.fillMaxWidth()) {
+                SliderField(
+                    label = t("session_minutes", lang), value = sessionMinutes,
+                    range = UserProfile.SESSION_MINUTES_RANGE.first.toFloat()..UserProfile.SESSION_MINUTES_RANGE.last.toFloat(),
+                    valueLabel = "${sessionMinutes.toInt()} min", colors = sliderColors,
+                    onValueChange = { sessionMinutes = it }
+                )
+            }
+        }
+
+        item {
             PrimaryButton(t("generate_plan", lang), modifier = Modifier.fillMaxWidth()) {
                 onSubmit(
                     UserProfile(
                         weightKg = weight.toDouble(), heightCm = height.toDouble(), age = age.toInt(), sex = sex, level = level,
                         goal = goal, daysPerWeek = days,
-                        equipment = if (equipment.isEmpty()) setOf(Equipment.BODYWEIGHT_ONLY) else equipment
+                        equipment = if (equipment.isEmpty()) setOf(Equipment.BODYWEIGHT_ONLY) else equipment,
+                        sessionMinutes = sessionMinutes.toInt()
                     )
                 )
             }

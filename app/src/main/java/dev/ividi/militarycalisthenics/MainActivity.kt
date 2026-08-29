@@ -22,6 +22,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.ividi.militarycalisthenics.data.PlanRepository
+import dev.ividi.militarycalisthenics.model.DailyWorkout
 import dev.ividi.militarycalisthenics.model.next
 import dev.ividi.militarycalisthenics.ui.ProvideLang
 import dev.ividi.militarycalisthenics.ui.screens.OnboardingScreen
@@ -29,12 +30,13 @@ import dev.ividi.militarycalisthenics.ui.screens.PlanScreen
 import dev.ividi.militarycalisthenics.ui.screens.ProgressScreen
 import dev.ividi.militarycalisthenics.ui.screens.SettingsScreen
 import dev.ividi.militarycalisthenics.ui.screens.SplashScreen
+import dev.ividi.militarycalisthenics.ui.screens.WorkoutSessionScreen
 import dev.ividi.militarycalisthenics.ui.theme.BgBase
 import dev.ividi.militarycalisthenics.ui.theme.MilitaryCalisthenicsTheme
 import dev.ividi.militarycalisthenics.viewmodel.MainViewModel
 import dev.ividi.militarycalisthenics.viewmodel.MainViewModelFactory
 
-private enum class Screen { SPLASH, ONBOARDING, PLAN, SETTINGS, PROGRESS }
+private enum class Screen { SPLASH, ONBOARDING, PLAN, SETTINGS, PROGRESS, SESSION }
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -53,6 +55,8 @@ class MainActivity : ComponentActivity() {
                 val remindersEnabled by viewModel.remindersEnabled.collectAsState()
                 val reminderHour by viewModel.reminderHour.collectAsState()
                 var screen by remember { mutableStateOf(Screen.SPLASH) }
+                var sessionDay by remember { mutableStateOf<DailyWorkout?>(null) }
+                var sessionWeekIndex by remember { mutableStateOf(0) }
 
                 ProvideLang(lang) {
                     AnimatedContent(
@@ -93,10 +97,37 @@ class MainActivity : ComponentActivity() {
                                         onRepeatPlan = viewModel::regeneratePlan,
                                         onLevelUp = viewModel::levelUp,
                                         onDismissPlanComplete = viewModel::acknowledgePlanComplete,
-                                        onOpenSettings = { screen = Screen.SETTINGS }
+                                        onOpenSettings = { screen = Screen.SETTINGS },
+                                        onStartWorkout = { weekIndex, day ->
+                                            sessionWeekIndex = weekIndex
+                                            sessionDay = day
+                                            screen = Screen.SESSION
+                                        }
                                     )
                                 } else {
                                     screen = Screen.ONBOARDING
+                                }
+                            }
+                            Screen.SESSION -> {
+                                val day = sessionDay
+                                if (day != null) {
+                                    WorkoutSessionScreen(
+                                        lang = lang,
+                                        day = day,
+                                        onExit = {
+                                            sessionDay = null
+                                            screen = Screen.PLAN
+                                        },
+                                        onFinish = {
+                                            if (!day.completed) {
+                                                viewModel.toggleWorkoutCompleted(sessionWeekIndex, day.dayIndex)
+                                            }
+                                            sessionDay = null
+                                            screen = Screen.PLAN
+                                        }
+                                    )
+                                } else {
+                                    screen = Screen.PLAN
                                 }
                             }
                             Screen.SETTINGS -> {

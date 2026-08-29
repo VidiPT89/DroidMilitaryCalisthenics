@@ -46,6 +46,7 @@ import dev.ividi.militarycalisthenics.ui.Lang
 import dev.ividi.militarycalisthenics.ui.components.CompletionBadge
 import dev.ividi.militarycalisthenics.ui.components.ExerciseDetailDialog
 import dev.ividi.militarycalisthenics.ui.components.PlanCompleteDialog
+import dev.ividi.militarycalisthenics.ui.components.PrimaryButton
 import dev.ividi.militarycalisthenics.ui.components.ProgressRing
 import dev.ividi.militarycalisthenics.ui.components.SectionCard
 import dev.ividi.militarycalisthenics.ui.components.SelectableChip
@@ -67,7 +68,8 @@ fun PlanScreen(
     onRepeatPlan: () -> Unit,
     onLevelUp: () -> Unit,
     onDismissPlanComplete: () -> Unit,
-    onOpenSettings: () -> Unit
+    onOpenSettings: () -> Unit,
+    onStartWorkout: (weekIndex: Int, day: DailyWorkout) -> Unit
 ) {
     var selectedWeek by remember { mutableIntStateOf(0) }
     var demoExercise by remember { mutableStateOf<ExerciseSet?>(null) }
@@ -147,7 +149,8 @@ fun PlanScreen(
                         workout = workout,
                         lang = lang,
                         onToggle = { onToggleCompleted(targetWeek.weekIndex, workout.dayIndex) },
-                        onExerciseClick = { demoExercise = it }
+                        onExerciseClick = { demoExercise = it },
+                        onStartWorkout = { onStartWorkout(targetWeek.weekIndex, workout) }
                     )
                 }
                 item { Column(Modifier.padding(bottom = 24.dp)) {} }
@@ -161,7 +164,8 @@ private fun WorkoutCard(
     workout: DailyWorkout,
     lang: Lang,
     onToggle: () -> Unit,
-    onExerciseClick: (ExerciseSet) -> Unit
+    onExerciseClick: (ExerciseSet) -> Unit,
+    onStartWorkout: () -> Unit
 ) {
     val context = LocalContext.current
     SectionCard(modifier = Modifier.fillMaxWidth()) {
@@ -184,6 +188,8 @@ private fun WorkoutCard(
             }
 
             workout.blocks.forEach { block -> BlockRow(block, lang, onExerciseClick) }
+
+            PrimaryButton(t("start_workout", lang), modifier = Modifier.fillMaxWidth(), onClick = onStartWorkout)
 
             SelectableChip(
                 text = t("mark_done", lang),

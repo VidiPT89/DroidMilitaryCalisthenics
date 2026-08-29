@@ -31,7 +31,8 @@ data class UserProfile(
     val level: FitnessLevel,
     val goal: Goal,
     val daysPerWeek: Int,
-    val equipment: Set<Equipment> = setOf(Equipment.BODYWEIGHT_ONLY)
+    val equipment: Set<Equipment> = setOf(Equipment.BODYWEIGHT_ONLY),
+    val sessionMinutes: Int = 30
 ) {
     val bmi: Double
         get() {
@@ -44,6 +45,7 @@ data class UserProfile(
         val HEIGHT_RANGE = 120.0..230.0
         val AGE_RANGE = 14..75
         val DAYS_RANGE = 3..6
+        val SESSION_MINUTES_RANGE = 15..60
     }
 }
 
@@ -55,7 +57,8 @@ data class ExerciseSet(
     val name: String,
     val reps: Int? = null,
     val seconds: Int? = null,
-    val sets: Int
+    val sets: Int,
+    val restSeconds: Int = 30
 )
 
 @Serializable
