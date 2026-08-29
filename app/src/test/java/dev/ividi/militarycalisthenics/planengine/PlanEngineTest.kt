@@ -312,6 +312,24 @@ class PlanEngineTest {
     }
 
     @Test
+    fun `no exercise name repeats twice within the same day across blocks`() {
+        // Regression test: "Hip Openers" used to be in both the fixed
+        // warm-up and the Mobility goal's core pool, and "Cat-Cow" in both
+        // the Mobility goal's circuit and core pools — either could show up
+        // twice in the same day's workout.
+        Goal.entries.forEach { goal ->
+            val plan = PlanEngine.generate(baseProfile(goal = goal, daysPerWeek = 4))
+            plan.weeks.forEach { week ->
+                week.workouts.forEach { day ->
+                    val allNames = day.blocks.flatMap { it.exercises.map { ex -> ex.name } }
+                    val duplicates = allNames.groupingBy { it }.eachCount().filter { it.value > 1 }
+                    assertTrue("$goal day ${day.dayIndex} has duplicate exercises: $duplicates", duplicates.isEmpty())
+                }
+            }
+        }
+    }
+
+    @Test
     fun `mobility goal replaces ab core work with mobility drills`() {
         // Regression test: the core block used to always train abs (Plank,
         // Leg Raises, ...) even on the Mobility goal, unlike iOS which

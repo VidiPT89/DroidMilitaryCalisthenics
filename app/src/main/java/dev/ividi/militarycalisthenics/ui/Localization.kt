@@ -151,6 +151,7 @@ private val strings: Map<String, Pair<String, String>> = mapOf(
     "Jumping Jacks" to ("Polichinelos" to "Jumping Jacks"),
     "Arm Circles" to ("Círculos de Braços" to "Arm Circles"),
     "Bodyweight Squats" to ("Agachamentos com Peso do Corpo" to "Bodyweight Squats"),
+    "Light Squats" to ("Agachamentos Leves" to "Light Squats"),
     "Hip Openers" to ("Abertura de Anca" to "Hip Openers"),
     "Shoulder Circles" to ("Rotação de Ombros" to "Shoulder Circles"),
     "Thoracic Rotations" to ("Rotação Torácica" to "Thoracic Rotations"),

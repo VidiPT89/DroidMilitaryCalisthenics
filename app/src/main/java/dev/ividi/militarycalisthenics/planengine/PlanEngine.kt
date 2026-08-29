@@ -132,7 +132,7 @@ object PlanEngine {
         exercises = listOf(
             ExerciseSet("Jumping Jacks", seconds = 60, sets = 1, restSeconds = 15),
             ExerciseSet("Arm Circles", seconds = 30, sets = 1, restSeconds = 15),
-            ExerciseSet("Bodyweight Squats", reps = 15, sets = 1, restSeconds = 15),
+            ExerciseSet("Light Squats", reps = 15, sets = 1, restSeconds = 15),
             ExerciseSet("Hip Openers", seconds = 30, sets = 1, restSeconds = 15)
         )
     )
@@ -229,15 +229,20 @@ object PlanEngine {
             CircuitCandidate("High Knees", baseSeconds = 30),
             CircuitCandidate("Bear Crawl", baseSeconds = 30)
         )
+        // Deliberately does not reuse "Pike Push-ups"/"Diamond Push-ups" —
+        // they're already in strengthPool's push list, and sharing a name
+        // between the strength and circuit pools let the same exercise
+        // appear twice in one day's workout (e.g. on a "Push Strength" day).
         Goal.STRENGTH_MASS -> listOf(
             CircuitCandidate("Mountain Climbers", baseSeconds = 30),
-            CircuitCandidate("Pike Push-ups", baseReps = 8, minLevel = FitnessLevel.INTERMEDIATE),
             CircuitCandidate("Explosive Push-ups", baseReps = 6, minLevel = FitnessLevel.INTERMEDIATE),
-            CircuitCandidate("Diamond Push-ups", baseReps = 8, minLevel = FitnessLevel.INTERMEDIATE)
+            CircuitCandidate("Jump Squats", baseReps = 14, skipOverForty = true)
         )
         Goal.MOBILITY -> listOf(
+            // "Cat-Cow" deliberately lives only in the Mobility goal's core
+            // pool (see coreBlock's mobilityPool) — having it here too meant
+            // it could appear twice in the same day's workout.
             CircuitCandidate("World's Greatest Stretch", baseReps = 6),
-            CircuitCandidate("Cat-Cow", baseReps = 10),
             CircuitCandidate("Bodyweight Good Mornings", baseReps = 10)
         )
     }
@@ -281,8 +286,10 @@ object PlanEngine {
         // On the Mobility goal, swap ab-focused core work for mobility
         // drills — matches iOS, which substitutes its core block the same
         // way for that goal instead of always training abs.
+        // "Hip Openers" deliberately excluded here — it's already in every
+        // day's fixed warm-up block (see warmUpBlock), so including it here
+        // too would let it appear twice in the same Mobility-goal workout.
         val mobilityPool = listOf(
-            ExerciseSet("Hip Openers", seconds = scale(30, multiplier), sets = 3, restSeconds = 20),
             ExerciseSet("Cat-Cow", reps = scale(10, multiplier), sets = 3, restSeconds = 20),
             ExerciseSet("Shoulder Circles", seconds = scale(30, multiplier), sets = 3, restSeconds = 20),
             ExerciseSet("Thoracic Rotations", seconds = scale(30, multiplier), sets = 3, restSeconds = 20),
