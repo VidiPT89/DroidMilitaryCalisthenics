@@ -93,7 +93,8 @@ data class DailyWorkout(
 @Serializable
 data class WeeklyPlan(
     val weekIndex: Int,
-    val workouts: List<DailyWorkout>
+    val workouts: List<DailyWorkout>,
+    val isDeload: Boolean = false
 )
 
 @Serializable

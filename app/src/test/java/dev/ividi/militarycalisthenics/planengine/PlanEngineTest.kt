@@ -177,7 +177,7 @@ class PlanEngineTest {
         // purely cosmetic (or only respected for STRENGTH_MASS) — the
         // strength block used to ignore them and always include the same
         // fixed exercise list regardless of goal.
-        val legNames = setOf("Bodyweight Squats", "Lunges", "Glute Bridges")
+        val legNames = setOf("Squats", "Lunges", "Glute Bridges")
         Goal.entries.forEach { goal ->
             val plan = PlanEngine.generate(baseProfile(goal = goal, daysPerWeek = 6))
             plan.weeks.forEach { week ->
@@ -194,7 +194,7 @@ class PlanEngineTest {
 
     @Test
     fun `lower body day only includes leg exercises`() {
-        val legNames = setOf("Bodyweight Squats", "Lunges", "Glute Bridges")
+        val legNames = setOf("Squats", "Lunges", "Glute Bridges")
         Goal.entries.forEach { goal ->
             val plan = PlanEngine.generate(baseProfile(goal = goal, daysPerWeek = 4))
             plan.weeks.forEach { week ->
@@ -221,7 +221,7 @@ class PlanEngineTest {
             .exercises.map { it.name }
         assertTrue(
             "expected the bodyweight pull fallback exercise, got $strengthNames",
-            strengthNames.contains("Inverted Rows / Table Rows")
+            strengthNames.contains("Inverted Rows (table)")
         )
     }
 
