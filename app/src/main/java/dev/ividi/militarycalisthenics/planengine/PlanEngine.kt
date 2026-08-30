@@ -175,7 +175,12 @@ object PlanEngine {
     }
 
     private fun buildDay(label: String, splitIndex: Int, weekIndex: Int, profile: UserProfile, intensity: Double, scale: Double): DailyWorkout {
-        val warmupBlock = block(BlockType.WARM_UP, Catalog.warmup.take(3), intensity, scale, rest = 15)
+        // Rotated like every other block (see `pick`) — previously always
+        // took the catalog's first 3 entries with no rotation at all, so
+        // warm-up (and cool-down, below) was identical on every single day
+        // of every week, and the catalog's remaining entries were dead code.
+        val warmupExercises = pick(Catalog.warmup, splitIndex, weekIndex, 3)
+        val warmupBlock = block(BlockType.WARM_UP, warmupExercises, intensity, scale, rest = 15)
 
         val hasCircuit = includeCircuit(profile.goal, label)
         val budget = SessionBudget(profile.sessionMinutes, hasCircuit)
@@ -212,6 +217,13 @@ object PlanEngine {
         }
 
         var corePool = if (profile.goal == Goal.MOBILITY) Catalog.mobility else Catalog.core
+        if (hasCircuit) {
+            // Every circuit pool includes "Mountain Climbers" — its
+            // core-block sibling "Mountain Climbers (core)" is the same
+            // physical exercise under a different name, so on any day that
+            // has a circuit block it would otherwise show up twice.
+            corePool = corePool.filter { it.name != "Mountain Climbers (core)" }
+        }
         if (profile.goal != Goal.MOBILITY) {
             // Bonus core exercises that unlock with equipment (hanging leg
             // raises need a bar, L-sit needs parallettes) — these train core,
@@ -227,7 +239,8 @@ object PlanEngine {
         val coreExercises = pick(corePool, splitIndex, weekIndex, coreCount)
         blocks += block(BlockType.CORE, coreExercises, intensity, scale, rest = 20)
 
-        blocks += block(BlockType.COOL_DOWN, Catalog.cooldown.take(3), intensity, scale, rest = 10)
+        val cooldownExercises = pick(Catalog.cooldown, splitIndex, weekIndex, 3)
+        blocks += block(BlockType.COOL_DOWN, cooldownExercises, intensity, scale, rest = 10)
 
         return DailyWorkout(dayIndex = splitIndex, title = label, blocks = blocks)
     }

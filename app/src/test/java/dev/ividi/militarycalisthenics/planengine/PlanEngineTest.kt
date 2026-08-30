@@ -345,6 +345,46 @@ class PlanEngineTest {
     }
 
     @Test
+    fun `warmup and cooldown vary across days and weeks`() {
+        // Regression test: warm-up/cool-down used to always take the
+        // catalog's first 3 entries with no rotation, so both blocks were
+        // identical on every day of every week.
+        val plan = PlanEngine.generate(baseProfile(daysPerWeek = 6))
+        assertTrue("expected multiple weeks and days", plan.weeks.size >= 2 && plan.weeks[0].workouts.size >= 2)
+
+        val day1Warmup = plan.weeks[0].workouts[0].blocks.first { it.type == dev.ividi.militarycalisthenics.model.BlockType.WARM_UP }.exercises.map { it.name }
+        val day2Warmup = plan.weeks[0].workouts[1].blocks.first { it.type == dev.ividi.militarycalisthenics.model.BlockType.WARM_UP }.exercises.map { it.name }
+        assertNotEquals("warm-up should vary across days of the same week", day1Warmup, day2Warmup)
+
+        val week1Cooldown = plan.weeks[0].workouts[0].blocks.first { it.type == dev.ividi.militarycalisthenics.model.BlockType.COOL_DOWN }.exercises.map { it.name }
+        val week2Cooldown = plan.weeks[1].workouts[0].blocks.first { it.type == dev.ividi.militarycalisthenics.model.BlockType.COOL_DOWN }.exercises.map { it.name }
+        assertNotEquals("cool-down should vary across weeks", week1Cooldown, week2Cooldown)
+    }
+
+    @Test
+    fun `mountain climbers never appears in both circuit and core on the same day`() {
+        // Regression test: "Mountain Climbers" (circuit) and "Mountain
+        // Climbers (core)" (core) are the same physical exercise under two
+        // different catalog names, so the exact-name duplicate check never
+        // caught them showing up together on the same day.
+        Goal.entries.forEach { goal ->
+            val plan = PlanEngine.generate(baseProfile(goal = goal, daysPerWeek = 6))
+            plan.weeks.forEach { week ->
+                week.workouts.forEach { day ->
+                    val circuitHasIt = day.blocks.firstOrNull { it.type == dev.ividi.militarycalisthenics.model.BlockType.CIRCUIT }
+                        ?.exercises?.any { it.name == "Mountain Climbers" } ?: false
+                    val coreHasIt = day.blocks.first { it.type == dev.ividi.militarycalisthenics.model.BlockType.CORE }
+                        .exercises.any { it.name == "Mountain Climbers (core)" }
+                    assertTrue(
+                        "$goal day ${day.dayIndex} has Mountain Climbers in both circuit and core",
+                        !(circuitHasIt && coreHasIt)
+                    )
+                }
+            }
+        }
+    }
+
+    @Test
     fun `shorter session minutes never increases the strength exercise count`() {
         val short = PlanEngine.generate(baseProfile(sessionMinutes = 15))
         val long = PlanEngine.generate(baseProfile(sessionMinutes = 60))
