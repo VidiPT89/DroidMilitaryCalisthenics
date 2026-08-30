@@ -10,11 +10,9 @@ import kotlin.math.roundToInt
  */
 object PlanEngine {
 
-    private const val WEEK_COUNT = 6
-
     fun generate(profile: UserProfile): TrainingPlan {
         val baseMultiplier = levelMultiplier(profile.level) * ageMultiplier(profile.age) * bmiMultiplier(profile.bmi) * sexMultiplier(profile.sex)
-        val weeks = (0 until WEEK_COUNT).map { weekIndex ->
+        val weeks = (0 until profile.level.progressionWeeks).map { weekIndex ->
             val progression = 1.0 + weekIndex * 0.08
             WeeklyPlan(
                 weekIndex = weekIndex,
@@ -53,19 +51,38 @@ object PlanEngine {
 
     private fun buildWeekWorkouts(profile: UserProfile, multiplier: Double, weekIndex: Int): List<DailyWorkout> {
         val budget = sessionBudget(profile.sessionMinutes)
-        return (0 until profile.daysPerWeek).map { dayIndex ->
-            DailyWorkout(
-                dayIndex = dayIndex,
-                title = dayTitle(profile.goal, dayIndex),
-                blocks = listOf(
-                    warmUpBlock(),
-                    strengthBlock(profile, multiplier, dayIndex, weekIndex, budget.strengthSeconds),
-                    circuitBlock(profile, multiplier, dayIndex, weekIndex, budget.circuitSeconds),
-                    coreBlock(profile.goal, multiplier, dayIndex, weekIndex, budget.coreSeconds),
-                    coolDownBlock()
-                )
-            )
+        val labels = splitLabels(profile.daysPerWeek)
+        return labels.mapIndexed { dayIndex, label ->
+            val blocks = mutableListOf(warmUpBlock(), strengthBlock(profile, multiplier, dayIndex, weekIndex, label, budget.strengthSeconds))
+            if (includeCircuit(profile.goal, label)) {
+                blocks += circuitBlock(profile, multiplier, dayIndex, weekIndex, budget.circuitSeconds)
+            }
+            blocks += coreBlock(profile.goal, multiplier, dayIndex, weekIndex, budget.coreSeconds)
+            blocks += coolDownBlock()
+            DailyWorkout(dayIndex = dayIndex, title = label, blocks = blocks)
         }
+    }
+
+    /**
+     * Splits days by a fixed, goal-independent pattern based on
+     * `daysPerWeek` — matches iOS's `PlanEngine.splitLabels` exactly, so
+     * both platforms use the same day-naming scheme and the same
+     * movement-pattern filtering rule below, instead of Android's previous
+     * per-goal title lists (Push Strength, Selection Prep, ...) that only
+     * actually constrained exercise selection for the strengthMass goal.
+     */
+    private fun splitLabels(daysPerWeek: Int): List<String> = when (daysPerWeek) {
+        3 -> listOf("Full Body I", "Full Body II", "Full Body III")
+        4 -> listOf("Upper Body", "Lower Body", "Full Body", "Conditioning")
+        5 -> listOf("Upper Body", "Lower Body", "Push", "Pull", "Conditioning")
+        else -> listOf("Upper Body", "Lower Body", "Push", "Pull", "Conditioning", "Mobility")
+    }
+
+    /** Matches iOS's `PlanEngine.includeCircuit`. */
+    private fun includeCircuit(goal: Goal, label: String): Boolean = when (goal) {
+        Goal.FAT_LOSS, Goal.MILITARY_ENDURANCE -> true
+        Goal.STRENGTH_MASS -> label == "Conditioning"
+        Goal.MOBILITY -> false
     }
 
     /**
@@ -97,34 +114,18 @@ object PlanEngine {
         return exercises.take(count)
     }
 
-    private fun dayTitle(goal: Goal, dayIndex: Int): String {
-        val focuses = when (goal) {
-            Goal.FAT_LOSS -> listOf("Full Body Burn", "Metabolic Circuit", "Core & Cardio", "Total Conditioning", "Endurance Push", "Active Recovery")
-            Goal.STRENGTH_MASS -> listOf("Push Strength", "Pull Strength", "Legs & Core", "Upper Power", "Full Body Strength", "Grip & Core")
-            Goal.MILITARY_ENDURANCE -> listOf("Selection Prep", "Ruck & Core", "Speed Endurance", "Combat Circuit", "Max Reps Test", "Recovery Mobility")
-            Goal.MOBILITY -> listOf("Mobility Flow", "Control & Balance", "Light Strength", "Joint Health", "Full Body Flow", "Active Stretch")
-        }
-        return focuses[dayIndex % focuses.size]
-    }
-
     /**
-     * Which movement patterns a day's strength block should draw from. Only
-     * STRENGTH_MASS's day titles (see [dayTitle]) actually promise a specific
-     * focus ("Push Strength", "Legs & Core", ...) — this is what makes that
-     * promise real instead of the title being purely cosmetic. Other goals'
-     * titles are generic conditioning themes, so their strength block stays
-     * balanced across all patterns.
+     * Which movement patterns a day's strength block should draw from,
+     * based on the day's own label — matches iOS's `PlanEngine.patterns(forLabel:)`.
+     * This is what makes "Lower Body" actually mean lower body instead of
+     * the label being purely cosmetic, for every goal (not just strengthMass).
      */
-    private fun dayPatternFocus(goal: Goal, dayIndex: Int): Set<MovementPattern> {
-        if (goal != Goal.STRENGTH_MASS) return setOf(MovementPattern.PUSH, MovementPattern.PULL, MovementPattern.LEGS)
-        return when (dayIndex % 6) {
-            0 -> setOf(MovementPattern.PUSH) // Push Strength
-            1 -> setOf(MovementPattern.PULL) // Pull Strength
-            2 -> setOf(MovementPattern.LEGS) // Legs & Core
-            3 -> setOf(MovementPattern.PUSH, MovementPattern.PULL) // Upper Power
-            4 -> setOf(MovementPattern.PUSH, MovementPattern.PULL, MovementPattern.LEGS) // Full Body Strength
-            else -> setOf(MovementPattern.PULL) // Grip & Core
-        }
+    private fun dayPatternFocus(label: String): Set<MovementPattern> = when (label) {
+        "Upper Body" -> setOf(MovementPattern.PUSH, MovementPattern.PULL)
+        "Lower Body" -> setOf(MovementPattern.LEGS)
+        "Push" -> setOf(MovementPattern.PUSH)
+        "Pull" -> setOf(MovementPattern.PULL)
+        else -> setOf(MovementPattern.PUSH, MovementPattern.PULL, MovementPattern.LEGS)
     }
 
     private fun warmUpBlock() = TrainingBlock(
@@ -180,11 +181,11 @@ object PlanEngine {
         return push + pull + legs
     }
 
-    private fun strengthBlock(profile: UserProfile, multiplier: Double, dayIndex: Int, weekIndex: Int, budgetSeconds: Int): TrainingBlock {
+    private fun strengthBlock(profile: UserProfile, multiplier: Double, dayIndex: Int, weekIndex: Int, label: String, budgetSeconds: Int): TrainingBlock {
         val sets = scaleSets(3, multiplier)
         val restSeconds = if (profile.goal == Goal.STRENGTH_MASS) 75 else 45
 
-        val allowedPatterns = dayPatternFocus(profile.goal, dayIndex)
+        val allowedPatterns = dayPatternFocus(label)
         val fullPool = strengthPool(profile)
         val patternFiltered = fullPool.filter { it.pattern in allowedPatterns }.ifEmpty { fullPool }
         val levelFiltered = patternFiltered.filter { levelAllows(it.minLevel, profile.level) }.ifEmpty { patternFiltered }

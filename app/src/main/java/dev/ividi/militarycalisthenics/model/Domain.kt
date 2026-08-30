@@ -8,6 +8,14 @@ enum class Sex { MALE, FEMALE, UNSPECIFIED }
 @Serializable
 enum class FitnessLevel { BEGINNER, INTERMEDIATE, ADVANCED }
 
+/** Total weeks in a generated plan for this level — matches iOS's `FitnessLevel.progressionWeeks`. */
+val FitnessLevel.progressionWeeks: Int
+    get() = when (this) {
+        FitnessLevel.BEGINNER -> 4
+        FitnessLevel.INTERMEDIATE -> 6
+        FitnessLevel.ADVANCED -> 8
+    }
+
 /** The level reached after finishing this one's full plan, or null once already at ADVANCED. */
 val FitnessLevel.next: FitnessLevel?
     get() = when (this) {
@@ -54,8 +62,8 @@ enum class BlockType { WARM_UP, STRENGTH, CIRCUIT, CORE, COOL_DOWN }
 
 /**
  * Movement pattern a strength exercise trains — used to make exercise
- * selection respect the day's own focus (e.g. a "Push Strength" day
- * shouldn't be filled with squats).
+ * selection respect the day's own focus (e.g. a "Push" day shouldn't be
+ * filled with squats).
  */
 enum class MovementPattern { PUSH, PULL, LEGS }
 
