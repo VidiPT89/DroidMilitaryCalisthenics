@@ -63,14 +63,17 @@ class PlanRepository(private val context: Context) {
         }.orEmpty()
     }
 
-    suspend fun addWeightEntry(entry: WeightEntry) {
+    suspend fun addWeightEntry(entry: WeightEntry): List<WeightEntry> {
+        var updated: List<WeightEntry> = emptyList()
         context.dataStore.edit { prefs ->
             val current = prefs[WEIGHT_HISTORY_KEY]?.let {
                 runCatching { json.decodeFromString<List<WeightEntry>>(it) }.getOrNull()
             }.orEmpty()
-            val updated = (current + entry).sortedBy { it.timestampMillis }
+            updated = (current.filterNot { it.timestampMillis == entry.timestampMillis } + entry)
+                .sortedBy { it.timestampMillis }
             prefs[WEIGHT_HISTORY_KEY] = json.encodeToString(updated)
         }
+        return updated
     }
 
     /** Removes one entry by timestamp and returns the remaining history, sorted oldest to newest. */

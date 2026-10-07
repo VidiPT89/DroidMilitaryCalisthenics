@@ -1,6 +1,7 @@
 package dev.ividi.militarycalisthenics
 
 import android.os.Bundle
+import androidx.activity.compose.BackHandler
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -13,16 +14,15 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.ividi.militarycalisthenics.data.PlanRepository
-import dev.ividi.militarycalisthenics.model.DailyWorkout
 import dev.ividi.militarycalisthenics.model.next
 import dev.ividi.militarycalisthenics.ui.ProvideLang
 import dev.ividi.militarycalisthenics.ui.screens.OnboardingScreen
@@ -49,18 +49,30 @@ class MainActivity : ComponentActivity() {
             val themeMode by viewModel.themeMode.collectAsState()
 
             MilitaryCalisthenicsTheme(themeMode = themeMode) {
+                val isLoaded by viewModel.isLoaded.collectAsState()
                 val plan by viewModel.plan.collectAsState()
                 val lang by viewModel.lang.collectAsState()
                 val weightHistory by viewModel.weightHistory.collectAsState()
                 val remindersEnabled by viewModel.remindersEnabled.collectAsState()
                 val reminderHour by viewModel.reminderHour.collectAsState()
-                var screen by remember { mutableStateOf(Screen.SPLASH) }
-                var sessionDay by remember { mutableStateOf<DailyWorkout?>(null) }
-                var sessionWeekIndex by remember { mutableStateOf(0) }
+                var screen by rememberSaveable { mutableStateOf(Screen.SPLASH) }
+                var sessionDayIndex by rememberSaveable { mutableStateOf<Int?>(null) }
+                var splashFinished by rememberSaveable { mutableStateOf(false) }
+                var sessionWeekIndex by rememberSaveable { mutableStateOf(0) }
+
+                BackHandler(screen == Screen.SETTINGS || screen == Screen.PROGRESS) {
+                    screen = if (screen == Screen.PROGRESS) Screen.SETTINGS else Screen.PLAN
+                }
+
+                LaunchedEffect(splashFinished, isLoaded) {
+                    if (splashFinished && isLoaded && screen == Screen.SPLASH) {
+                        screen = if (plan != null) Screen.PLAN else Screen.ONBOARDING
+                    }
+                }
 
                 ProvideLang(lang) {
                     AnimatedContent(
-                        targetState = screen,
+                        targetState = if (isLoaded) screen else Screen.SPLASH,
                         transitionSpec = {
                             (slideInHorizontally(tween(350)) { it / 4 } + fadeIn(tween(350))) togetherWith
                                 (slideOutHorizontally(tween(200)) { -it / 4 } + fadeOut(tween(200)))
@@ -71,7 +83,7 @@ class MainActivity : ComponentActivity() {
                         when (current) {
                             Screen.SPLASH -> {
                                 SplashScreen {
-                                    screen = if (plan != null) Screen.PLAN else Screen.ONBOARDING
+                                    splashFinished = true
                                 }
                             }
                             Screen.ONBOARDING -> {
@@ -100,7 +112,7 @@ class MainActivity : ComponentActivity() {
                                         onOpenSettings = { screen = Screen.SETTINGS },
                                         onStartWorkout = { weekIndex, day ->
                                             sessionWeekIndex = weekIndex
-                                            sessionDay = day
+                                            sessionDayIndex = day.dayIndex
                                             screen = Screen.SESSION
                                         }
                                     )
@@ -109,20 +121,21 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
                             Screen.SESSION -> {
-                                val day = sessionDay
+                                val day = plan?.weeks?.find { it.weekIndex == sessionWeekIndex }
+                                    ?.workouts?.find { it.dayIndex == sessionDayIndex }
                                 if (day != null) {
                                     WorkoutSessionScreen(
                                         lang = lang,
                                         day = day,
                                         onExit = {
-                                            sessionDay = null
+                                            sessionDayIndex = null
                                             screen = Screen.PLAN
                                         },
                                         onFinish = {
                                             if (!day.completed) {
                                                 viewModel.toggleWorkoutCompleted(sessionWeekIndex, day.dayIndex)
                                             }
-                                            sessionDay = null
+                                            sessionDayIndex = null
                                             screen = Screen.PLAN
                                         }
                                     )

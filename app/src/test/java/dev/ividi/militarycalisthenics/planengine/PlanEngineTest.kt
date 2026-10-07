@@ -9,6 +9,7 @@ import dev.ividi.militarycalisthenics.model.progressionWeeks
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
+import org.junit.Assert.assertFalse
 import org.junit.Test
 
 class PlanEngineTest {
@@ -48,6 +49,18 @@ class PlanEngineTest {
                 }
             }
         }
+    }
+
+    @Test
+    fun `profile validation rejects non finite and out of range inputs`() {
+        val profile = baseProfile()
+        assertTrue(profile.isValid)
+        for (weight in listOf(Double.NaN, Double.POSITIVE_INFINITY, 29.0, 251.0)) {
+            assertFalse(profile.copy(weightKg = weight).isValid)
+        }
+        assertFalse(profile.copy(heightCm = 0.0).isValid)
+        assertFalse(profile.copy(daysPerWeek = 7).isValid)
+        assertFalse(profile.copy(equipment = emptySet()).isValid)
     }
 
     @Test

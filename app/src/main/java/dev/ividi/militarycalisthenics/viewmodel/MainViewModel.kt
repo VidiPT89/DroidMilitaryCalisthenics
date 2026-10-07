@@ -3,7 +3,6 @@ package dev.ividi.militarycalisthenics.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.ividi.militarycalisthenics.data.PlanRepository
-import dev.ividi.militarycalisthenics.model.FitnessLevel
 import dev.ividi.militarycalisthenics.model.TrainingPlan
 import dev.ividi.militarycalisthenics.model.UserProfile
 import dev.ividi.militarycalisthenics.model.WeeklyPlan
@@ -18,6 +17,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class MainViewModel(private val repository: PlanRepository) : ViewModel() {
+
+    private val _isLoaded = MutableStateFlow(false)
+    val isLoaded: StateFlow<Boolean> = _isLoaded.asStateFlow()
 
     private val _plan = MutableStateFlow<TrainingPlan?>(null)
     val plan: StateFlow<TrainingPlan?> = _plan.asStateFlow()
@@ -43,6 +45,7 @@ class MainViewModel(private val repository: PlanRepository) : ViewModel() {
     init {
         viewModelScope.launch {
             _plan.value = repository.currentPlan()
+            _isLoaded.value = true
         }
         viewModelScope.launch {
             repository.langFlow.collect { _lang.value = it }
@@ -71,6 +74,7 @@ class MainViewModel(private val repository: PlanRepository) : ViewModel() {
     }
 
     fun generatePlan(profile: UserProfile) {
+        if (!profile.isValid) return
         val generated = PlanEngine.generate(profile)
         _plan.value = generated
         _planCompletionAcknowledged.value = false
@@ -104,7 +108,9 @@ class MainViewModel(private val repository: PlanRepository) : ViewModel() {
      */
     fun deleteWeightEntry(timestampMillis: Long) {
         viewModelScope.launch {
+            val wasMostRecent = _weightHistory.value.maxByOrNull { it.timestampMillis }?.timestampMillis == timestampMillis
             val remaining = repository.removeWeightEntry(timestampMillis)
+            if (!wasMostRecent) return@launch
             val current = _plan.value ?: return@launch
             val mostRecent = remaining.maxByOrNull { it.timestampMillis } ?: return@launch
             if (mostRecent.weightKg == current.profile.weightKg) return@launch
@@ -133,36 +139,11 @@ class MainViewModel(private val repository: PlanRepository) : ViewModel() {
         viewModelScope.launch { repository.savePlan(updated) }
     }
 
-    /**
-     * True once every workout in the plan's final week is marked completed —
-     * the trigger for the plan-completion prompt (repeat or level up).
-     * See docs/plan-engine-spec.md "Plan completion".
-     */
-    val isPlanComplete: Boolean
-        get() {
-            val lastWeek = _plan.value?.weeks?.maxByOrNull { it.weekIndex } ?: return false
-            if (lastWeek.workouts.isEmpty()) return false
-            return lastWeek.workouts.all { it.completed }
-        }
-
-    /**
-     * Whether the plan-completion prompt should be shown: the plan is
-     * complete and the user hasn't already dismissed the prompt for it.
-     * Unlike `isPlanComplete`, this stays false across recompositions/app
-     * restarts once acknowledged, so it doesn't nag on every visit.
-     */
-    val shouldShowPlanComplete: Boolean
-        get() = isPlanComplete && !_planCompletionAcknowledged.value
-
     /** Records that the user has seen the plan-completion prompt for the current plan. */
     fun acknowledgePlanComplete() {
         _planCompletionAcknowledged.value = true
         viewModelScope.launch { repository.setPlanCompletionAcknowledged(true) }
     }
-
-    /** The level `levelUp()` would move to, or null if already at ADVANCED. */
-    val nextLevel: FitnessLevel?
-        get() = _plan.value?.profile?.level?.next
 
     /** Moves the profile to the next FitnessLevel and regenerates the plan for it. No-op at ADVANCED. */
     fun levelUp() {
@@ -193,14 +174,17 @@ class MainViewModel(private val repository: PlanRepository) : ViewModel() {
      * (weight/BMI signal, age, level, goal), per docs/plan-engine-spec.md.
      */
     fun logWeight(weightKg: Double, timestampMillis: Long = System.currentTimeMillis()) {
-        viewModelScope.launch { repository.addWeightEntry(WeightEntry(timestampMillis, weightKg)) }
-
-        val current = _plan.value ?: return
-        val updatedProfile = current.profile.copy(weightKg = weightKg)
-        val recalibrated = PlanEngine.generate(updatedProfile)
-        _plan.value = recalibrated
-        _planCompletionAcknowledged.value = false
+        if (weightKg !in UserProfile.WEIGHT_RANGE || timestampMillis > System.currentTimeMillis()) return
+        if (_plan.value == null) return
         viewModelScope.launch {
+            val history = repository.addWeightEntry(WeightEntry(timestampMillis, weightKg))
+            val newest = history.lastOrNull() ?: return@launch
+            if (newest.timestampMillis != timestampMillis) return@launch
+            val current = _plan.value ?: return@launch
+            if (current.profile.weightKg == newest.weightKg) return@launch
+            val recalibrated = PlanEngine.generate(current.profile.copy(weightKg = newest.weightKg))
+            _plan.value = recalibrated
+            _planCompletionAcknowledged.value = false
             repository.savePlan(recalibrated)
             repository.setPlanCompletionAcknowledged(false)
         }

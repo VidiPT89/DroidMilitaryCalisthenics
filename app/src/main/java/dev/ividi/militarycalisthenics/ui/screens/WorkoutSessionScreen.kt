@@ -1,5 +1,6 @@
 package dev.ividi.militarycalisthenics.ui.screens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -14,6 +15,11 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -76,11 +82,26 @@ private fun buildSteps(day: DailyWorkout): List<WorkoutStep> {
 @Composable
 fun WorkoutSessionScreen(lang: Lang, day: DailyWorkout, onExit: () -> Unit, onFinish: () -> Unit) {
     val steps = remember(day) { buildSteps(day) }
-    var currentIndex by remember { mutableIntStateOf(0) }
-    var remainingSeconds by remember { mutableIntStateOf(0) }
-    var isPaused by remember { mutableStateOf(false) }
-    var confirmingExit by remember { mutableStateOf(false) }
+    var currentIndex by rememberSaveable(day) { mutableIntStateOf(0) }
+    var remainingSeconds by rememberSaveable(day) { mutableIntStateOf(0) }
+    var isPaused by rememberSaveable(day) { mutableStateOf(false) }
+    var confirmingExit by rememberSaveable(day) { mutableStateOf(false) }
+    var initializedIndex by rememberSaveable(day) { mutableIntStateOf(-1) }
     val currentStep = steps.getOrNull(currentIndex)
+    val lifecycleOwner = LocalLifecycleOwner.current
+    BackHandler { confirmingExit = true; isPaused = true }
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_PAUSE) isPaused = true
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    fun advance() {
+        isPaused = false
+        currentIndex += 1
+    }
 
     LaunchedEffect(currentIndex) {
         val step = steps.getOrNull(currentIndex) ?: run { onFinish(); return@LaunchedEffect }
@@ -89,12 +110,15 @@ fun WorkoutSessionScreen(lang: Lang, day: DailyWorkout, onExit: () -> Unit, onFi
             remainingSeconds = 0
             return@LaunchedEffect
         }
-        remainingSeconds = seconds
+        if (initializedIndex != currentIndex) {
+            remainingSeconds = seconds
+            initializedIndex = currentIndex
+        }
         while (remainingSeconds > 0) {
             delay(1000)
-            if (!isPaused) remainingSeconds -= 1
+            if (!isPaused && !confirmingExit) remainingSeconds -= 1
         }
-        currentIndex += 1
+        advance()
     }
 
     Box(modifier = Modifier.fillMaxSize().background(BgBase)) {
@@ -107,7 +131,7 @@ fun WorkoutSessionScreen(lang: Lang, day: DailyWorkout, onExit: () -> Unit, onFi
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = { confirmingExit = true }) {
+                IconButton(onClick = { confirmingExit = true; isPaused = true }) {
                     Icon(Icons.Filled.Close, contentDescription = t("session_exit_confirm_action", lang), tint = TextDim)
                 }
                 if (currentStep != null) {
@@ -140,23 +164,20 @@ fun WorkoutSessionScreen(lang: Lang, day: DailyWorkout, onExit: () -> Unit, onFi
                 }
             }
 
-            if (currentStep != null) {
-                when {
-                    currentStep.isRest -> {
-                        PrimaryButton(t("session_skip_rest", lang), modifier = Modifier.fillMaxWidth()) { currentIndex += 1 }
+            if (currentStep != null && !confirmingExit) {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    if (currentStep.isRest) {
+                        PrimaryButton(t("session_skip_rest", lang), modifier = Modifier.fillMaxWidth()) { advance() }
+                    } else if (currentStep.exercise.reps != null) {
+                        PrimaryButton(t("session_done", lang), modifier = Modifier.fillMaxWidth()) { advance() }
                     }
-                    currentStep.exercise.reps != null -> {
-                        PrimaryButton(t("session_done", lang), modifier = Modifier.fillMaxWidth()) { currentIndex += 1 }
-                    }
-                    else -> {
+                    if (currentStep.isRest || currentStep.exercise.seconds != null) {
                         Text(
                             if (isPaused) t("session_resume", lang) else t("session_pause", lang),
                             color = TextDim,
                             fontWeight = FontWeight.SemiBold,
-                            modifier = Modifier
-                                .fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth().clickable { isPaused = !isPaused }
                                 .padding(vertical = 12.dp)
-                                .clickable { isPaused = !isPaused }
                         )
                     }
                 }

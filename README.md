@@ -7,7 +7,7 @@
 ## ✨ Features
 
 - ✅ Guided onboarding — weight, height, age, sex, fitness level, goal, training days and equipment
-- ✅ Periodized 6-week training plan generated on-device, no server required
+- ✅ Periodized 4–8 week training plan generated on-device, no server required
 - ✅ Warm-up, strength, circuit/HIIT, core and cool-down blocks every session
 - ✅ Volume and intensity auto-calibrated from level, age and BMI signal
 - ✅ Animated progress ring, day cards and completion states
@@ -53,7 +53,7 @@ emulator or device (minimum SDK 26).
 
 1. Launch the app and fill in your profile: weight, height, age, level,
    goal, training days per week and available equipment.
-2. Tap **Generate plan** to build your personalized 6-week program.
+2. Tap **Generate plan** to build your personalized 4–8 week program.
 3. Browse weeks with the week selector, open a day to see its warm-up,
    strength, circuit, core and cool-down blocks, and mark workouts done
    as you complete them.

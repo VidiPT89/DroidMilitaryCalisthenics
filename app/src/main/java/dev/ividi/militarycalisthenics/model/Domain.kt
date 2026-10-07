@@ -48,6 +48,11 @@ data class UserProfile(
             return weightKg / (heightM * heightM)
         }
 
+    val isValid: Boolean
+        get() = weightKg in WEIGHT_RANGE && heightCm in HEIGHT_RANGE &&
+            age in AGE_RANGE && daysPerWeek in DAYS_RANGE &&
+            sessionMinutes in SESSION_MINUTES_RANGE && equipment.isNotEmpty()
+
     companion object {
         val WEIGHT_RANGE = 30.0..250.0
         val HEIGHT_RANGE = 120.0..230.0
