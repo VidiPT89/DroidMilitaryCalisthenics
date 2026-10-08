@@ -23,6 +23,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import kotlin.math.roundToInt
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,11 +49,12 @@ import java.util.Locale
 fun ProgressScreen(
     lang: Lang,
     weightHistory: List<WeightEntry>,
+    currentWeight: Double,
     onLogWeight: (Double) -> Unit,
     onDeleteWeightEntry: (Long) -> Unit,
     onBack: () -> Unit
 ) {
-    var weightInput by remember { mutableFloatStateOf(75f) }
+    var weightInput by rememberSaveable { mutableFloatStateOf(currentWeight.toFloat()) }
     var justLogged by remember { mutableStateOf(false) }
     val dateFormat = remember { SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()) }
 
@@ -82,11 +85,11 @@ fun ProgressScreen(
                     Text(t("log_weight_subtitle", lang), color = TextDim, fontSize = 13.sp)
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                         Text(t("weight", lang), color = TextDim, fontSize = 14.sp)
-                        Text("${weightInput.toInt()} kg", color = TextPrimary, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
+                        Text("${String.format(if (lang == Lang.PT) Locale.forLanguageTag("pt-PT") else Locale.ENGLISH, "%.1f", weightInput)} kg", color = TextPrimary, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
                     }
                     Slider(
                         value = weightInput,
-                        onValueChange = { weightInput = it; justLogged = false },
+                        onValueChange = { weightInput = (it * 2).roundToInt() / 2f; justLogged = false },
                         valueRange = 30f..250f,
                         colors = sliderColors
                     )
@@ -95,7 +98,7 @@ fun ProgressScreen(
                         justLogged = true
                     }
                     if (justLogged) {
-                        Text(t("plan_recalibrated", lang), color = ColorOk, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                        Text(t("weight_saved", lang), color = ColorOk, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                     }
                 }
             }

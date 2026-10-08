@@ -3,6 +3,12 @@ package dev.ividi.militarycalisthenics.ui.screens
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -49,13 +55,14 @@ import dev.ividi.militarycalisthenics.ui.theme.ThemeMode
 
 private val REMINDER_HOURS = listOf(6, 8, 12, 18, 20)
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun SettingsScreen(
     lang: Lang,
     onLangChange: (Lang) -> Unit,
     themeMode: ThemeMode,
     onThemeModeChange: (ThemeMode) -> Unit,
-    onResetProfile: () -> Unit,
+    onEditProfile: () -> Unit,
     onRegeneratePlan: () -> Unit,
     onOpenProgress: () -> Unit,
     onBack: () -> Unit,
@@ -66,6 +73,7 @@ fun SettingsScreen(
     val uriHandler = LocalUriHandler.current
     val context = LocalContext.current
 
+    var confirmRestart by remember { mutableStateOf(false) }
     var permissionDenied by remember { mutableStateOf(false) }
 
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
@@ -94,7 +102,17 @@ fun SettingsScreen(
         onRemindersChange(false, reminderHour)
     }
 
-    Column(modifier = Modifier.fillMaxSize().padding(24.dp)) {
+    if (confirmRestart) {
+        AlertDialog(
+            onDismissRequest = { confirmRestart = false },
+            title = { Text(t("regenerate_plan", lang)) },
+            text = { Text(t("restart_warning", lang)) },
+            confirmButton = { TextButton(onClick = { confirmRestart = false; onRegeneratePlan() }) { Text(t("regenerate_plan", lang)) } },
+            dismissButton = { TextButton(onClick = { confirmRestart = false }) { Text(t("cancel", lang)) } }
+        )
+    }
+
+    Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             IconButton(onClick = onBack) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = t("back", lang), tint = AccentOrange)
@@ -106,7 +124,7 @@ fun SettingsScreen(
             SectionCard(modifier = Modifier.fillMaxWidth()) {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(t("language", lang), color = TextPrimary, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         SelectableChip("PT-PT", lang == Lang.PT) { onLangChange(Lang.PT) }
                         SelectableChip("EN", lang == Lang.EN) { onLangChange(Lang.EN) }
                     }
@@ -116,7 +134,7 @@ fun SettingsScreen(
             SectionCard(modifier = Modifier.fillMaxWidth()) {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(t("theme", lang), color = TextPrimary, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         SelectableChip(t("theme_dark", lang), themeMode == ThemeMode.DARK) { onThemeModeChange(ThemeMode.DARK) }
                         SelectableChip(t("theme_light", lang), themeMode == ThemeMode.LIGHT) { onThemeModeChange(ThemeMode.LIGHT) }
                         SelectableChip(t("theme_system", lang), themeMode == ThemeMode.SYSTEM) { onThemeModeChange(ThemeMode.SYSTEM) }
@@ -150,7 +168,7 @@ fun SettingsScreen(
                     }
                     if (remindersEnabled) {
                         Text(t("reminder_time", lang), color = TextDim, fontSize = 12.sp)
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             REMINDER_HOURS.forEach { hour ->
                                 SelectableChip("%02d:00".format(hour), reminderHour == hour) {
                                     enableReminders(hour)
@@ -168,9 +186,9 @@ fun SettingsScreen(
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(t("profile_section", lang), color = TextPrimary, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
                     Text(t("regenerate_plan_subtitle", lang), color = TextDim, fontSize = 12.sp)
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        SelectableChip(t("regenerate_plan", lang), selected = false, onClick = onRegeneratePlan)
-                        SelectableChip(t("edit_profile", lang), selected = false, onClick = onResetProfile)
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        SelectableChip(t("regenerate_plan", lang), selected = false, onClick = { confirmRestart = true })
+                        SelectableChip(t("edit_profile", lang), selected = false, onClick = onEditProfile)
                     }
                 }
             }

@@ -1,6 +1,12 @@
 package dev.ividi.militarycalisthenics.ui.screens
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -123,8 +129,8 @@ fun WorkoutSessionScreen(lang: Lang, day: DailyWorkout, onExit: () -> Unit, onFi
 
     Box(modifier = Modifier.fillMaxSize().background(BgBase)) {
         Column(
-            modifier = Modifier.fillMaxSize().padding(24.dp),
-            verticalArrangement = Arrangement.SpaceBetween
+            modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(28.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -140,6 +146,10 @@ fun WorkoutSessionScreen(lang: Lang, day: DailyWorkout, onExit: () -> Unit, onFi
                 Box(modifier = Modifier.padding(24.dp))
             }
 
+            LinearProgressIndicator(
+                progress = { currentIndex.toFloat() / maxOf(1, steps.size) },
+                modifier = Modifier.fillMaxWidth().semantics { contentDescription = t("session_progress", lang) }, color = AccentOrange
+            )
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -148,7 +158,7 @@ fun WorkoutSessionScreen(lang: Lang, day: DailyWorkout, onExit: () -> Unit, onFi
                 if (currentStep != null) {
                     if (currentStep.isRest) {
                         Text(t("session_rest", lang), color = ColorOk, fontWeight = FontWeight.Bold, fontSize = 22.sp)
-                        Text(timeString(remainingSeconds), color = TextPrimary, fontWeight = FontWeight.Black, fontSize = 56.sp)
+                        Text(timeString(remainingSeconds), style = TextStyle(fontFeatureSettings = "tnum"), color = TextPrimary, fontWeight = FontWeight.Black, fontSize = 56.sp)
                     } else {
                         Text(t(currentStep.exercise.name, lang), color = TextPrimary, fontWeight = FontWeight.Black, fontSize = 26.sp)
                         Text(
@@ -156,7 +166,7 @@ fun WorkoutSessionScreen(lang: Lang, day: DailyWorkout, onExit: () -> Unit, onFi
                             color = TextDim, fontSize = 14.sp
                         )
                         if (currentStep.exercise.seconds != null) {
-                            Text(timeString(remainingSeconds), color = AccentOrange, fontWeight = FontWeight.Black, fontSize = 56.sp)
+                            Text(timeString(remainingSeconds), style = TextStyle(fontFeatureSettings = "tnum"), color = AccentOrange, fontWeight = FontWeight.Black, fontSize = 56.sp)
                         } else if (currentStep.exercise.reps != null) {
                             Text("${currentStep.exercise.reps} ${t("reps", lang)}", color = AccentOrange, fontWeight = FontWeight.Black, fontSize = 44.sp)
                         }

@@ -13,6 +13,12 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.unit.dp
+import dev.ividi.militarycalisthenics.notifications.ReminderScheduler
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -23,6 +29,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.ividi.militarycalisthenics.data.PlanRepository
+import dev.ividi.militarycalisthenics.model.isComplete
 import dev.ividi.militarycalisthenics.model.next
 import dev.ividi.militarycalisthenics.ui.ProvideLang
 import dev.ividi.militarycalisthenics.ui.screens.OnboardingScreen
@@ -58,9 +65,10 @@ class MainActivity : ComponentActivity() {
                 var screen by rememberSaveable { mutableStateOf(Screen.SPLASH) }
                 var sessionDayIndex by rememberSaveable { mutableStateOf<Int?>(null) }
                 var splashFinished by rememberSaveable { mutableStateOf(false) }
+                var selectedWeekIndex by rememberSaveable { mutableStateOf(0) }
                 var sessionWeekIndex by rememberSaveable { mutableStateOf(0) }
 
-                BackHandler(screen == Screen.SETTINGS || screen == Screen.PROGRESS) {
+                BackHandler(screen == Screen.SETTINGS || screen == Screen.PROGRESS || (screen == Screen.ONBOARDING && plan != null)) {
                     screen = if (screen == Screen.PROGRESS) Screen.SETTINGS else Screen.PLAN
                 }
 
@@ -77,7 +85,8 @@ class MainActivity : ComponentActivity() {
                             (slideInHorizontally(tween(350)) { it / 4 } + fadeIn(tween(350))) togetherWith
                                 (slideOutHorizontally(tween(200)) { -it / 4 } + fadeOut(tween(200)))
                         },
-                        modifier = Modifier.fillMaxSize().background(BgBase),
+                        modifier = Modifier.fillMaxSize().background(BgBase).safeDrawingPadding()
+                            .wrapContentSize(Alignment.TopCenter).widthIn(max = 760.dp),
                         label = "screenTransition"
                     ) { current ->
                         when (current) {
@@ -87,8 +96,12 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
                             Screen.ONBOARDING -> {
-                                OnboardingScreen(lang = lang) { profile ->
+                                OnboardingScreen(
+                                    lang = lang, initialProfile = plan?.profile,
+                                    onCancel = if (plan != null) ({ screen = Screen.PLAN }) else null
+                                ) { profile ->
                                     viewModel.generatePlan(profile)
+                                    selectedWeekIndex = 0
                                     screen = Screen.PLAN
                                 }
                             }
@@ -96,18 +109,16 @@ class MainActivity : ComponentActivity() {
                                 val currentPlan = plan
                                 if (currentPlan != null) {
                                     val planCompletionAcknowledged by viewModel.planCompletionAcknowledged.collectAsState()
-                                    val lastWeek = currentPlan.weeks.maxByOrNull { it.weekIndex }
-                                    val isPlanComplete = lastWeek != null &&
-                                        lastWeek.workouts.isNotEmpty() &&
-                                        lastWeek.workouts.all { it.completed }
                                     PlanScreen(
                                         plan = currentPlan,
                                         lang = lang,
-                                        shouldShowPlanComplete = isPlanComplete && !planCompletionAcknowledged,
+                                        selectedWeek = selectedWeekIndex,
+                                        onSelectWeek = { selectedWeekIndex = it },
+                                        shouldShowPlanComplete = currentPlan.isComplete && !planCompletionAcknowledged,
                                         nextLevel = currentPlan.profile.level.next,
                                         onToggleCompleted = viewModel::toggleWorkoutCompleted,
-                                        onRepeatPlan = viewModel::regeneratePlan,
-                                        onLevelUp = viewModel::levelUp,
+                                        onRepeatPlan = { viewModel.regeneratePlan(); selectedWeekIndex = 0 },
+                                        onLevelUp = { viewModel.levelUp(); selectedWeekIndex = 0 },
                                         onDismissPlanComplete = viewModel::acknowledgePlanComplete,
                                         onOpenSettings = { screen = Screen.SETTINGS },
                                         onStartWorkout = { weekIndex, day ->
@@ -146,15 +157,20 @@ class MainActivity : ComponentActivity() {
                             Screen.SETTINGS -> {
                                 SettingsScreen(
                                     lang = lang,
-                                    onLangChange = viewModel::setLang,
+                                    onLangChange = { selectedLang ->
+                                        viewModel.setLang(selectedLang)
+                                        if (remindersEnabled) {
+                                            ReminderScheduler.schedule(applicationContext, reminderHour, lang = selectedLang)
+                                        }
+                                    },
                                     themeMode = themeMode,
                                     onThemeModeChange = viewModel::setThemeMode,
-                                    onResetProfile = {
-                                        viewModel.resetProfile()
+                                    onEditProfile = {
                                         screen = Screen.ONBOARDING
                                     },
                                     onRegeneratePlan = {
                                         viewModel.regeneratePlan()
+                                        selectedWeekIndex = 0
                                         screen = Screen.PLAN
                                     },
                                     onOpenProgress = { screen = Screen.PROGRESS },
@@ -168,6 +184,7 @@ class MainActivity : ComponentActivity() {
                                 ProgressScreen(
                                     lang = lang,
                                     weightHistory = weightHistory,
+                                    currentWeight = plan?.profile?.weightKg ?: 75.0,
                                     onLogWeight = viewModel::logWeight,
                                     onDeleteWeightEntry = viewModel::deleteWeightEntry,
                                     onBack = { screen = Screen.SETTINGS }

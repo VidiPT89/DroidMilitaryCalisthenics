@@ -35,26 +35,29 @@ val DarkAppColors = AppColors(
     accentDark = Color(0xFFDD7400),
     textPrimary = Color(0xFFE2E8F0),
     textDim = Color(0xFF94A3B8),
-    textFaint = Color(0xFF5B6474),
+    textFaint = Color(0xFF8996A8),
     colorError = Color(0xFFEF4444),
     colorOk = Color(0xFF22C55E)
 )
 
-// Warm off-white background, deepened accents for AA contrast on light panels
-// (e.g. white-on-#D9760A text still clears ~3:1, and #D9760A-on-#FAF8F5 clears ~3.3:1).
+// Match iOS: warm light surfaces and a darker orange for readable accent text.
 val LightAppColors = AppColors(
-    bgBase = Color(0xFFFAF8F5),
-    bgPanel = Color(0xFFF1EDE6),
-    bgPanel2 = Color(0xFFE8E2D8),
-    accentOrange = Color(0xFFD9760A),
-    accentYellow = Color(0xFFB8860B),
-    accentDark = Color(0xFFA85C00),
-    textPrimary = Color(0xFF1A1712),
-    textDim = Color(0xFF52493C),
-    textFaint = Color(0xFF8A8072),
-    colorError = Color(0xFFC22A2A),
-    colorOk = Color(0xFF167A3D)
+    bgBase = Color(0xFFF7F4EF),
+    bgPanel = Color(0xFFFFFFFF),
+    bgPanel2 = Color(0xFFEFE9DF),
+    accentOrange = Color(0xFFA14C08),
+    accentYellow = Color(0xFFF99C00),
+    accentDark = Color(0xFF8F4300),
+    textPrimary = Color(0xFF17140F),
+    textDim = Color(0xFF5C574F),
+    textFaint = Color(0xFF6A645B),
+    colorError = Color(0xFFC62828),
+    colorOk = Color(0xFF15803D)
 )
+
+val ActionStart = Color(0xFFF99C00)
+val ActionEnd = Color(0xFFFCBB00)
+val OnAction = Color(0xFF17140F)
 
 val LocalAppColors = compositionLocalOf { DarkAppColors }
 
@@ -97,9 +100,9 @@ fun MilitaryCalisthenicsTheme(themeMode: ThemeMode = ThemeMode.DARK, content: @C
     } else {
         lightColorScheme(
             primary = colors.accentOrange,
-            onPrimary = colors.bgBase,
+            onPrimary = Color.White,
             secondary = colors.accentYellow,
-            onSecondary = colors.bgBase,
+            onSecondary = OnAction,
             background = colors.bgBase,
             onBackground = colors.textPrimary,
             surface = colors.bgPanel,

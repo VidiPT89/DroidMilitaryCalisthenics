@@ -1,5 +1,7 @@
 package dev.ividi.militarycalisthenics.ui.components
 
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -21,7 +23,7 @@ import dev.ividi.militarycalisthenics.ui.theme.TextDim
 import dev.ividi.militarycalisthenics.ui.theme.TextPrimary
 
 /**
- * Shown when the user finishes the final week of their plan. Offers the two
+ * Shown when the user finishes every week of their plan. Offers the two
  * paths the plan engine already supports without re-onboarding: repeating
  * the same level or moving to the next one. See
  * docs/plan-engine-spec.md "Plan completion".
@@ -39,7 +41,7 @@ fun PlanCompleteDialog(
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp),
-                modifier = Modifier.padding(4.dp)
+                modifier = Modifier.verticalScroll(rememberScrollState()).padding(4.dp)
             ) {
                 Text(
                     text = t("plan_complete_title", lang),

@@ -16,7 +16,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.listSaver
+import androidx.compose.material3.TextButton
+import kotlin.math.roundToInt
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -37,16 +40,18 @@ import dev.ividi.militarycalisthenics.ui.theme.TextDim
 import dev.ividi.militarycalisthenics.ui.theme.TextPrimary
 
 @Composable
-fun OnboardingScreen(lang: Lang, onSubmit: (UserProfile) -> Unit) {
-    var weight by remember { mutableFloatStateOf(75f) }
-    var height by remember { mutableFloatStateOf(175f) }
-    var age by remember { mutableFloatStateOf(28f) }
-    var sex by remember { mutableStateOf(Sex.UNSPECIFIED) }
-    var level by remember { mutableStateOf(FitnessLevel.INTERMEDIATE) }
-    var goal by remember { mutableStateOf(Goal.MILITARY_ENDURANCE) }
-    var days by remember { mutableStateOf(4) }
-    var equipment by remember { mutableStateOf(setOf(Equipment.BODYWEIGHT_ONLY)) }
-    var sessionMinutes by remember { mutableFloatStateOf(30f) }
+fun OnboardingScreen(lang: Lang, initialProfile: UserProfile? = null, onCancel: (() -> Unit)? = null, onSubmit: (UserProfile) -> Unit) {
+    var weight by rememberSaveable { mutableFloatStateOf(initialProfile?.weightKg?.toFloat() ?: 75f) }
+    var height by rememberSaveable { mutableFloatStateOf(initialProfile?.heightCm?.toFloat() ?: 175f) }
+    var age by rememberSaveable { mutableFloatStateOf(initialProfile?.age?.toFloat() ?: 28f) }
+    var sex by rememberSaveable { mutableStateOf(initialProfile?.sex ?: Sex.UNSPECIFIED) }
+    var level by rememberSaveable { mutableStateOf(initialProfile?.level ?: FitnessLevel.BEGINNER) }
+    var goal by rememberSaveable { mutableStateOf(initialProfile?.goal ?: Goal.FAT_LOSS) }
+    var days by rememberSaveable { mutableStateOf(initialProfile?.daysPerWeek ?: 4) }
+    var equipment by rememberSaveable(stateSaver = listSaver<Set<Equipment>, String>(
+        save = { it.map { item -> item.name } }, restore = { it.map(Equipment::valueOf).toSet() }
+    )) { mutableStateOf((initialProfile?.equipment ?: emptySet()) + Equipment.BODYWEIGHT_ONLY) }
+    var sessionMinutes by rememberSaveable { mutableFloatStateOf(initialProfile?.sessionMinutes?.toFloat() ?: 30f) }
 
     val sliderColors = SliderDefaults.colors(
         thumbColor = AccentOrange,
@@ -61,7 +66,8 @@ fun OnboardingScreen(lang: Lang, onSubmit: (UserProfile) -> Unit) {
     ) {
         item {
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text(t("onboarding_title", lang), color = TextPrimary, fontWeight = FontWeight.Black, fontSize = 28.sp)
+                if (onCancel != null) { TextButton(onClick = onCancel) { Text(t("cancel", lang)) } }
+                Text(t(if (initialProfile == null) "onboarding_title" else "edit_profile", lang), color = TextPrimary, fontWeight = FontWeight.Black, fontSize = 28.sp)
                 Text(t("onboarding_subtitle", lang), color = TextDim, fontSize = 14.sp)
             }
         }
@@ -73,19 +79,19 @@ fun OnboardingScreen(lang: Lang, onSubmit: (UserProfile) -> Unit) {
                         label = t("weight", lang), value = weight,
                         range = UserProfile.WEIGHT_RANGE.start.toFloat()..UserProfile.WEIGHT_RANGE.endInclusive.toFloat(),
                         valueLabel = "${weight.toInt()} kg", colors = sliderColors,
-                        onValueChange = { weight = it }
+                        onValueChange = { weight = it.roundToInt().toFloat() }
                     )
                     SliderField(
                         label = t("height", lang), value = height,
                         range = UserProfile.HEIGHT_RANGE.start.toFloat()..UserProfile.HEIGHT_RANGE.endInclusive.toFloat(),
                         valueLabel = "${height.toInt()} cm", colors = sliderColors,
-                        onValueChange = { height = it }
+                        onValueChange = { height = it.roundToInt().toFloat() }
                     )
                     SliderField(
                         label = t("age", lang), value = age,
                         range = UserProfile.AGE_RANGE.first.toFloat()..UserProfile.AGE_RANGE.last.toFloat(),
                         valueLabel = "${age.toInt()}", colors = sliderColors,
-                        onValueChange = { age = it }
+                        onValueChange = { age = it.roundToInt().toFloat() }
                     )
                 }
             }
@@ -126,14 +132,14 @@ fun OnboardingScreen(lang: Lang, onSubmit: (UserProfile) -> Unit) {
 
         item {
             LabeledChipGroup(t("equipment", lang)) {
-                SelectableChip(t("equipment_bodyweight", lang), equipment.contains(Equipment.BODYWEIGHT_ONLY)) {
+                SelectableChip(t("equipment_bodyweight", lang), equipment.none { it != Equipment.BODYWEIGHT_ONLY }) {
                     equipment = setOf(Equipment.BODYWEIGHT_ONLY)
                 }
                 SelectableChip(t("equipment_bar", lang), equipment.contains(Equipment.PULL_UP_BAR)) {
-                    equipment = (equipment - Equipment.BODYWEIGHT_ONLY) + Equipment.PULL_UP_BAR
+                    equipment = if (Equipment.PULL_UP_BAR in equipment) equipment - Equipment.PULL_UP_BAR else equipment + Equipment.PULL_UP_BAR
                 }
                 SelectableChip(t("equipment_parallettes", lang), equipment.contains(Equipment.PARALLETTES)) {
-                    equipment = (equipment - Equipment.BODYWEIGHT_ONLY) + Equipment.PARALLETTES
+                    equipment = if (Equipment.PARALLETTES in equipment) equipment - Equipment.PARALLETTES else equipment + Equipment.PARALLETTES
                 }
             }
         }
@@ -144,21 +150,26 @@ fun OnboardingScreen(lang: Lang, onSubmit: (UserProfile) -> Unit) {
                     label = t("session_minutes", lang), value = sessionMinutes,
                     range = UserProfile.SESSION_MINUTES_RANGE.first.toFloat()..UserProfile.SESSION_MINUTES_RANGE.last.toFloat(),
                     valueLabel = "${sessionMinutes.toInt()} min", colors = sliderColors,
-                    onValueChange = { sessionMinutes = it }
+                    onValueChange = { sessionMinutes = (it / 5).roundToInt() * 5f }
                 )
             }
         }
 
         item {
-            PrimaryButton(t("generate_plan", lang), modifier = Modifier.fillMaxWidth()) {
-                onSubmit(
-                    UserProfile(
-                        weightKg = weight.toDouble(), heightCm = height.toDouble(), age = age.toInt(), sex = sex, level = level,
-                        goal = goal, daysPerWeek = days,
-                        equipment = if (equipment.isEmpty()) setOf(Equipment.BODYWEIGHT_ONLY) else equipment,
-                        sessionMinutes = sessionMinutes.toInt()
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                if (initialProfile != null) {
+                    Text(t("profile_edit_warning", lang), color = TextDim, fontSize = 14.sp)
+                }
+                PrimaryButton(t(if (initialProfile == null) "generate_plan" else "save", lang), modifier = Modifier.fillMaxWidth()) {
+                    onSubmit(
+                        UserProfile(
+                            weightKg = weight.toDouble(), heightCm = height.toDouble(), age = age.toInt(), sex = sex, level = level,
+                            goal = goal, daysPerWeek = days,
+                            equipment = if (equipment.isEmpty()) setOf(Equipment.BODYWEIGHT_ONLY) else equipment,
+                            sessionMinutes = sessionMinutes.toInt()
+                        )
                     )
-                )
+                }
             }
         }
     }

@@ -13,7 +13,10 @@
 - ✅ Animated progress ring, day cards and completion states
 - ✅ Tap any exercise for a looping stick-figure demo and a short coaching cue, correctly oriented (floor exercises horizontal, standing exercises upright)
 - ✅ Log your bodyweight over time and watch the plan recalibrate itself automatically to your goal, delete any past entry
-- ✅ Regenerate your plan from your current profile at any time, without redoing onboarding
+- ✅ Edit your current profile with prefilled values, cancel safely, or restart the plan after confirmation
+- ✅ Compact workout cards with duration estimates, expandable exercise lists and remembered week selection
+- ✅ Scrollable settings, wrapping options and layouts that respect system bars and larger text
+- ✅ Full-plan completion requires every week, not only the last one
 - ✅ In-app PT-PT / EN language switch, independent of system locale
 - ✅ Fully offline, plan and progress saved locally
 - ✅ Dark and light theme, plus follow-system, in the same brand palette (orange / burnt yellow / near-black or warm off-white)

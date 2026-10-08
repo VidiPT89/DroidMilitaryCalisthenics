@@ -74,7 +74,7 @@ class MainViewModel(private val repository: PlanRepository) : ViewModel() {
     }
 
     fun generatePlan(profile: UserProfile) {
-        if (!profile.isValid) return
+        if (!profile.isValid || _plan.value?.profile == profile) return
         val generated = PlanEngine.generate(profile)
         _plan.value = generated
         _planCompletionAcknowledged.value = false
@@ -82,11 +82,6 @@ class MainViewModel(private val repository: PlanRepository) : ViewModel() {
             repository.savePlan(generated)
             repository.setPlanCompletionAcknowledged(false)
         }
-    }
-
-    fun resetProfile() {
-        _plan.value = null
-        viewModelScope.launch { repository.clearPlan() }
     }
 
     /** Re-runs the plan engine against the current profile without touching any inputs. */

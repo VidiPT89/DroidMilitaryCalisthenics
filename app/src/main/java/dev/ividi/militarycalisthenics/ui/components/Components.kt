@@ -2,7 +2,6 @@ package dev.ividi.militarycalisthenics.ui.components
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
@@ -10,6 +9,13 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.ui.semantics.Role
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.material3.MaterialTheme
+import dev.ividi.militarycalisthenics.ui.theme.ActionStart
+import dev.ividi.militarycalisthenics.ui.theme.ActionEnd
+import dev.ividi.militarycalisthenics.ui.theme.OnAction
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -18,7 +24,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -31,7 +36,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.ividi.militarycalisthenics.ui.theme.AccentOrange
 import dev.ividi.militarycalisthenics.ui.theme.AccentYellow
-import dev.ividi.militarycalisthenics.ui.theme.BgBase
 import dev.ividi.militarycalisthenics.ui.theme.BgPanel
 import dev.ividi.militarycalisthenics.ui.theme.BgPanel2
 import dev.ividi.militarycalisthenics.ui.theme.ColorOk
@@ -54,17 +58,18 @@ fun PrimaryButton(text: String, modifier: Modifier = Modifier, onClick: () -> Un
         modifier = modifier
             .scale(scale)
             .clip(RoundedCornerShape(16.dp))
-            .background(Brush.horizontalGradient(listOf(AccentOrange, AccentYellow)))
+            .background(Brush.horizontalGradient(listOf(ActionStart, ActionEnd)))
             .clickable(
                 interactionSource = interaction,
-                indication = null
+                indication = null,
+                role = Role.Button
             ) { onClick() }
             .padding(vertical = 16.dp, horizontal = 24.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = text,
-            color = BgBase,
+            color = OnAction,
             fontWeight = FontWeight.Bold,
             fontSize = 16.sp
         )
@@ -79,7 +84,7 @@ fun SelectableChip(text: String, selected: Boolean, onClick: () -> Unit) {
         label = "chipBg"
     )
     val textColor by animateColorAsState(
-        targetValue = if (selected) BgBase else TextDim,
+        targetValue = if (selected) MaterialTheme.colorScheme.onPrimary else TextDim,
         animationSpec = spring(),
         label = "chipText"
     )
@@ -90,8 +95,9 @@ fun SelectableChip(text: String, selected: Boolean, onClick: () -> Unit) {
             .clip(RoundedCornerShape(50))
             .background(bg)
             .border(1.dp, borderColor, RoundedCornerShape(50))
-            .clickable { onClick() }
-            .padding(vertical = 10.dp, horizontal = 18.dp)
+            .selectable(selected = selected, role = Role.Button, onClick = onClick)
+            .heightIn(min = 48.dp)
+            .padding(vertical = 12.dp, horizontal = 18.dp)
     ) {
         Text(text = text, color = textColor, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
     }
@@ -161,13 +167,13 @@ fun CompletionBadge(completed: Boolean, lang: dev.ividi.militarycalisthenics.ui.
     )
     val fg = if (completed) ColorOk else TextFaint
     val label = if (completed) "✓ ${dev.ividi.militarycalisthenics.ui.t("completed", lang)}" else dev.ividi.militarycalisthenics.ui.t("pending", lang)
-    val width by animateDpAsState(targetValue = if (completed) 108.dp else 96.dp, label = "badgeWidth")
 
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(50))
             .background(bg)
-            .size(width = width, height = 32.dp),
+            .heightIn(min = 32.dp)
+            .padding(horizontal = 12.dp, vertical = 6.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(

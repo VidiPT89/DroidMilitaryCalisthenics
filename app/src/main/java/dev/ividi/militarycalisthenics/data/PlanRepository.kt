@@ -47,10 +47,6 @@ class PlanRepository(private val context: Context) {
         context.dataStore.edit { it[PLAN_KEY] = json.encodeToString(plan) }
     }
 
-    suspend fun clearPlan() {
-        context.dataStore.edit { it.remove(PLAN_KEY) }
-    }
-
     suspend fun setLang(lang: Lang) {
         context.dataStore.edit { it[LANG_KEY] = lang.name }
     }

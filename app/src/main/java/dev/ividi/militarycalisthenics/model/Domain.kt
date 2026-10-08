@@ -113,3 +113,25 @@ data class WeightEntry(
     val timestampMillis: Long,
     val weightKg: Double
 )
+
+
+val DailyWorkout.exerciseCount: Int
+    get() = blocks.sumOf { it.exercises.size }
+
+val DailyWorkout.estimatedDurationSeconds: Int
+    get() {
+        val exercises = blocks.flatMap { it.exercises }
+        val total = exercises.sumOf {
+            val work = it.seconds ?: ((it.reps ?: 0) * 3)
+            maxOf(1, it.sets) * (work + it.restSeconds)
+        }
+        return maxOf(0, total - (exercises.lastOrNull()?.restSeconds ?: 0))
+    }
+
+val DailyWorkout.estimatedMinutes: Int
+    get() = (estimatedDurationSeconds + 59) / 60
+
+val TrainingPlan.isComplete: Boolean
+    get() = weeks.isNotEmpty() && weeks.all { week ->
+        week.workouts.isNotEmpty() && week.workouts.all { it.completed }
+    }
