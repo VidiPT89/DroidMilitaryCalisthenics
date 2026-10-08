@@ -68,6 +68,7 @@ private val strings: Map<String, Pair<String, String>> = mapOf(
     "circuit" to ("Circuito" to "Circuit"),
     "core" to ("Core" to "Core"),
     "cool_down" to ("Arrefecimento" to "Cool-down"),
+    "set" to ("série" to "set"),
     "sets" to ("séries" to "sets"),
     "reps" to ("reps" to "reps"),
     "seconds" to ("seg" to "sec"),

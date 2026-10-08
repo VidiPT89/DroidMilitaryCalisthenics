@@ -28,7 +28,7 @@ fun DailyWorkout.toShareText(lang: Lang): String {
             val amount = when {
                 ex.reps != null -> "${ex.sets}x${ex.reps} ${t("reps", lang)}"
                 ex.seconds != null -> "${ex.sets}x${ex.seconds}${t("seconds", lang)}"
-                else -> "${ex.sets} ${t("sets", lang)}"
+                else -> "${ex.sets} ${t(if (ex.sets == 1) "set" else "sets", lang)}"
             }
             builder.appendLine("- ${t(ex.name, lang)}: $amount")
         }

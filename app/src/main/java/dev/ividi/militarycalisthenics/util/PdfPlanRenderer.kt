@@ -66,7 +66,7 @@ object PdfPlanRenderer {
                 val amount = when {
                     ex.reps != null -> "${ex.sets}x${ex.reps} ${t("reps", lang)}"
                     ex.seconds != null -> "${ex.sets}x${ex.seconds}${t("seconds", lang)}"
-                    else -> "${ex.sets} ${t("sets", lang)}"
+                    else -> "${ex.sets} ${t(if (ex.sets == 1) "set" else "sets", lang)}"
                 }
                 canvas.drawText("• ${t(ex.name, lang)} — $amount", MARGIN + 8f, y, bodyPaint)
                 y += 16f
