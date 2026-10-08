@@ -135,3 +135,12 @@ val TrainingPlan.isComplete: Boolean
     get() = weeks.isNotEmpty() && weeks.all { week ->
         week.workouts.isNotEmpty() && week.workouts.all { it.completed }
     }
+
+
+/** Preserve all week metadata, including deload, while updating completion. */
+fun TrainingPlan.toggleWorkout(weekIndex: Int, dayIndex: Int, completed: Boolean? = null): TrainingPlan =
+    copy(weeks = weeks.map { week ->
+        if (week.weekIndex != weekIndex) week else week.copy(workouts = week.workouts.map { day ->
+            if (day.dayIndex != dayIndex) day else day.copy(completed = completed ?: !day.completed)
+        })
+    })

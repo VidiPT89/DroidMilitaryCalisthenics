@@ -42,7 +42,6 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import dev.ividi.militarycalisthenics.notifications.ReminderScheduler
 import dev.ividi.militarycalisthenics.ui.Lang
 import dev.ividi.militarycalisthenics.ui.components.SectionCard
 import dev.ividi.militarycalisthenics.ui.components.SelectableChip
@@ -79,7 +78,6 @@ fun SettingsScreen(
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (granted) {
             permissionDenied = false
-            ReminderScheduler.schedule(context, reminderHour, lang = lang)
             onRemindersChange(true, reminderHour)
         } else {
             permissionDenied = true
@@ -90,7 +88,6 @@ fun SettingsScreen(
         val hasPermission = Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
             ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
         if (hasPermission) {
-            ReminderScheduler.schedule(context, hour, lang = lang)
             onRemindersChange(true, hour)
         } else {
             permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
@@ -98,7 +95,6 @@ fun SettingsScreen(
     }
 
     fun disableReminders() {
-        ReminderScheduler.cancel(context)
         onRemindersChange(false, reminderHour)
     }
 

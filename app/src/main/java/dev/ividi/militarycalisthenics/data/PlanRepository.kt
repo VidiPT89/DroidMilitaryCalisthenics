@@ -1,6 +1,8 @@
 package dev.ividi.militarycalisthenics.data
 
 import android.content.Context
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
@@ -11,111 +13,69 @@ import dev.ividi.militarycalisthenics.model.WeightEntry
 import dev.ividi.militarycalisthenics.ui.Lang
 import dev.ividi.militarycalisthenics.ui.theme.ThemeMode
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 private val Context.dataStore by preferencesDataStore(name = "military_calisthenics_store")
-
 private val PLAN_KEY = stringPreferencesKey("training_plan")
 private val LANG_KEY = stringPreferencesKey("language")
 private val WEIGHT_HISTORY_KEY = stringPreferencesKey("weight_history")
 private val REMINDERS_ENABLED_KEY = booleanPreferencesKey("reminders_enabled")
 private val REMINDER_HOUR_KEY = intPreferencesKey("reminder_hour")
 private val THEME_MODE_KEY = stringPreferencesKey("theme_mode")
-private val PLAN_COMPLETION_ACKNOWLEDGED_KEY = booleanPreferencesKey("plan_completion_acknowledged")
-
+private val ACK_KEY = booleanPreferencesKey("plan_completion_acknowledged")
 private val json = Json { ignoreUnknownKeys = true }
 
-class PlanRepository(private val context: Context) {
+data class StoredState(
+    val plan: TrainingPlan? = null,
+    val weightHistory: List<WeightEntry> = emptyList(),
+    val lang: Lang = Lang.PT,
+    val themeMode: ThemeMode = ThemeMode.DARK,
+    val remindersEnabled: Boolean = false,
+    val reminderHour: Int = 18,
+    val completionAcknowledged: Boolean = false
+)
 
-    val planFlow: Flow<TrainingPlan?> = context.dataStore.data.map { prefs ->
-        prefs[PLAN_KEY]?.let { raw ->
-            runCatching { json.decodeFromString<TrainingPlan>(raw) }.getOrNull()
+/** Existing preference keys are preserved; each change is one durable transaction. */
+class PlanRepository(private val store: DataStore<Preferences>) {
+    constructor(context: Context) : this(context.dataStore)
+
+    val stateFlow: Flow<StoredState> = store.data.map(::decode)
+
+    suspend fun update(transform: (StoredState) -> StoredState): StoredState {
+        var result = StoredState()
+        store.edit { prefs ->
+            // Malformed data must fail visibly, never become an empty replacement.
+            result = transform(decode(prefs))
+            require(result.plan == null || result.plan!!.profile.isValid) { "Invalid profile update" }
+            require(result.weightHistory.all { it.weightKg in 30.0..250.0 }) { "Invalid weight update" }
+            if (result.plan == null) prefs.remove(PLAN_KEY)
+            else prefs[PLAN_KEY] = json.encodeToString(result.plan)
+            prefs[WEIGHT_HISTORY_KEY] = json.encodeToString(result.weightHistory)
+            prefs[LANG_KEY] = result.lang.name
+            prefs[THEME_MODE_KEY] = result.themeMode.name
+            prefs[REMINDERS_ENABLED_KEY] = result.remindersEnabled
+            prefs[REMINDER_HOUR_KEY] = result.reminderHour
+            prefs[ACK_KEY] = result.completionAcknowledged
+            result = decode(prefs)
         }
+        return result
     }
 
-    val langFlow: Flow<Lang> = context.dataStore.data.map { prefs ->
-        when (prefs[LANG_KEY]) {
-            "EN" -> Lang.EN
-            else -> Lang.PT
-        }
-    }
-
-    suspend fun savePlan(plan: TrainingPlan) {
-        context.dataStore.edit { it[PLAN_KEY] = json.encodeToString(plan) }
-    }
-
-    suspend fun setLang(lang: Lang) {
-        context.dataStore.edit { it[LANG_KEY] = lang.name }
-    }
-
-    suspend fun currentPlan(): TrainingPlan? = planFlow.first()
-
-    val weightHistoryFlow: Flow<List<WeightEntry>> = context.dataStore.data.map { prefs ->
-        prefs[WEIGHT_HISTORY_KEY]?.let { raw ->
-            runCatching { json.decodeFromString<List<WeightEntry>>(raw) }.getOrNull()
-        }.orEmpty()
-    }
-
-    suspend fun addWeightEntry(entry: WeightEntry): List<WeightEntry> {
-        var updated: List<WeightEntry> = emptyList()
-        context.dataStore.edit { prefs ->
-            val current = prefs[WEIGHT_HISTORY_KEY]?.let {
-                runCatching { json.decodeFromString<List<WeightEntry>>(it) }.getOrNull()
-            }.orEmpty()
-            updated = (current.filterNot { it.timestampMillis == entry.timestampMillis } + entry)
-                .sortedBy { it.timestampMillis }
-            prefs[WEIGHT_HISTORY_KEY] = json.encodeToString(updated)
-        }
-        return updated
-    }
-
-    /** Removes one entry by timestamp and returns the remaining history, sorted oldest to newest. */
-    suspend fun removeWeightEntry(timestampMillis: Long): List<WeightEntry> {
-        var remaining: List<WeightEntry> = emptyList()
-        context.dataStore.edit { prefs ->
-            val current = prefs[WEIGHT_HISTORY_KEY]?.let {
-                runCatching { json.decodeFromString<List<WeightEntry>>(it) }.getOrNull()
-            }.orEmpty()
-            remaining = current.filterNot { it.timestampMillis == timestampMillis }.sortedBy { it.timestampMillis }
-            prefs[WEIGHT_HISTORY_KEY] = json.encodeToString(remaining)
-        }
-        return remaining
-    }
-
-    val themeModeFlow: Flow<ThemeMode> = context.dataStore.data.map { prefs ->
-        when (prefs[THEME_MODE_KEY]) {
-            "LIGHT" -> ThemeMode.LIGHT
-            "SYSTEM" -> ThemeMode.SYSTEM
-            else -> ThemeMode.DARK
-        }
-    }
-
-    suspend fun setThemeMode(mode: ThemeMode) {
-        context.dataStore.edit { it[THEME_MODE_KEY] = mode.name }
-    }
-
-    val remindersEnabledFlow: Flow<Boolean> = context.dataStore.data.map { it[REMINDERS_ENABLED_KEY] ?: false }
-    val reminderHourFlow: Flow<Int> = context.dataStore.data.map { it[REMINDER_HOUR_KEY] ?: 18 }
-
-    suspend fun setReminderPreference(enabled: Boolean, hour: Int) {
-        context.dataStore.edit { prefs ->
-            prefs[REMINDERS_ENABLED_KEY] = enabled
-            prefs[REMINDER_HOUR_KEY] = hour
-        }
-    }
-
-    /**
-     * Whether the user has already seen the plan-completion prompt for the
-     * currently stored plan. Persisted (not just in-memory ViewModel state)
-     * so it doesn't reappear on every process restart while the same
-     * completed plan is still active.
-     */
-    val planCompletionAcknowledgedFlow: Flow<Boolean> = context.dataStore.data.map { it[PLAN_COMPLETION_ACKNOWLEDGED_KEY] ?: false }
-
-    suspend fun setPlanCompletionAcknowledged(acknowledged: Boolean) {
-        context.dataStore.edit { it[PLAN_COMPLETION_ACKNOWLEDGED_KEY] = acknowledged }
+    private fun decode(prefs: Preferences): StoredState {
+        val plan = prefs[PLAN_KEY]?.let { json.decodeFromString<TrainingPlan>(it) }
+        require(plan == null || plan.profile.isValid) { "Invalid stored profile" }
+        val history = prefs[WEIGHT_HISTORY_KEY]?.let { json.decodeFromString<List<WeightEntry>>(it) }.orEmpty()
+        require(history.all { it.weightKg in 30.0..250.0 }) { "Invalid stored weight" }
+        return StoredState(
+            plan = plan,
+            weightHistory = history.sortedBy { it.timestampMillis },
+            lang = if (prefs[LANG_KEY] == "EN") Lang.EN else Lang.PT,
+            themeMode = ThemeMode.entries.find { it.name == prefs[THEME_MODE_KEY] } ?: ThemeMode.DARK,
+            remindersEnabled = prefs[REMINDERS_ENABLED_KEY] ?: false,
+            reminderHour = (prefs[REMINDER_HOUR_KEY] ?: 18).coerceIn(0, 23),
+            completionAcknowledged = prefs[ACK_KEY] ?: false
+        )
     }
 }

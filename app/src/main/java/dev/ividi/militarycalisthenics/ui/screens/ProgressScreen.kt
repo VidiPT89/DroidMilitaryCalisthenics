@@ -50,7 +50,7 @@ fun ProgressScreen(
     lang: Lang,
     weightHistory: List<WeightEntry>,
     currentWeight: Double,
-    onLogWeight: (Double) -> Unit,
+    onLogWeight: (Double, () -> Unit) -> Unit,
     onDeleteWeightEntry: (Long) -> Unit,
     onBack: () -> Unit
 ) {
@@ -94,8 +94,7 @@ fun ProgressScreen(
                         colors = sliderColors
                     )
                     PrimaryButton(text = t("save", lang), modifier = Modifier.fillMaxWidth()) {
-                        onLogWeight(weightInput.toDouble())
-                        justLogged = true
+                        onLogWeight(weightInput.toDouble()) { justLogged = true }
                     }
                     if (justLogged) {
                         Text(t("weight_saved", lang), color = ColorOk, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)

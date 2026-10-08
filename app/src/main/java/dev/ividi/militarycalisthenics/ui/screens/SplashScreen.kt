@@ -36,7 +36,6 @@ import dev.ividi.militarycalisthenics.ui.theme.AccentYellow
 import dev.ividi.militarycalisthenics.ui.theme.BgBase
 import dev.ividi.militarycalisthenics.ui.theme.TextDim
 import dev.ividi.militarycalisthenics.ui.theme.TextPrimary
-import kotlinx.coroutines.delay
 
 @Composable
 fun SplashScreen(onFinished: () -> Unit) {
@@ -54,7 +53,6 @@ fun SplashScreen(onFinished: () -> Unit) {
     )
 
     LaunchedEffect(Unit) {
-        delay(1600)
         onFinished()
     }
 
